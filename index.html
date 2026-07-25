@@ -78,7 +78,7 @@
             <div class="nav-actions">
                 <div class="user-badge">
                     <div class="user-avatar" id="userAvatar">U</div>
-                    <span id="userName">User</span>
+                    <span id="userName" class="user-name-text">User</span>
                 </div>
                 <button id="settingsBtn" class="btn-icon" title="Settings">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -93,6 +93,39 @@
                         <line x1="21" y1="12" x2="9" y2="12"></line>
                     </svg>
                 </button>
+                <button id="hamburgerBtn" class="btn-icon hamburger" title="Menu">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div id="mobileMenu" class="mobile-menu">
+                <div class="mobile-menu-inner">
+                    <div class="mobile-menu-user">
+                        <div class="user-avatar" id="mobileAvatar">U</div>
+                        <div>
+                            <p id="mobileName" class="mobile-name">User</p>
+                            <p id="mobileEmail" class="mobile-email">user@email.com</p>
+                        </div>
+                    </div>
+                    <button id="mobileSettingsBtn" class="mobile-menu-item">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                        <span>Settings</span>
+                    </button>
+                    <button id="mobileLogoutBtn" class="mobile-menu-item danger">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        <span>Sign Out</span>
+                    </button>
+                </div>
             </div>
         </nav>
 
@@ -147,20 +180,32 @@
                             </svg>
                             <input type="text" id="searchInput" placeholder="Search expenses...">
                         </div>
-                        <select id="filterCategory">
-                            <option value="all">All Categories</option>
-                            <option value="food">Food & Dining</option>
-                            <option value="transport">Transport</option>
-                            <option value="shopping">Shopping</option>
-                            <option value="bills">Bills & Utilities</option>
-                            <option value="entertainment">Entertainment</option>
-                            <option value="health">Health</option>
-                            <option value="education">Education</option>
-                            <option value="other">Other</option>
-                        </select>
-                        <select id="filterMonth">
-                            <option value="all">All Time</option>
-                        </select>
+                        <div class="custom-select" id="filterCategorySelect" data-value="all">
+                            <div class="custom-select-trigger">
+                                <span>All Categories</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </div>
+                            <div class="custom-select-options">
+                                <div class="custom-option active" data-value="all">All Categories</div>
+                                <div class="custom-option" data-value="food">Food & Dining</div>
+                                <div class="custom-option" data-value="transport">Transport</div>
+                                <div class="custom-option" data-value="shopping">Shopping</div>
+                                <div class="custom-option" data-value="bills">Bills & Utilities</div>
+                                <div class="custom-option" data-value="entertainment">Entertainment</div>
+                                <div class="custom-option" data-value="health">Health</div>
+                                <div class="custom-option" data-value="education">Education</div>
+                                <div class="custom-option" data-value="other">Other</div>
+                            </div>
+                        </div>
+                        <div class="custom-select" id="filterMonthSelect" data-value="all">
+                            <div class="custom-select-trigger">
+                                <span>All Time</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </div>
+                            <div class="custom-select-options">
+                                <div class="custom-option active" data-value="all">All Time</div>
+                            </div>
+                        </div>
                         <button id="addExpenseBtn" class="btn btn-primary">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -201,18 +246,24 @@
                     <input type="number" id="expenseAmount" placeholder="0.00" min="0.01" step="0.01" required>
                 </div>
                 <div class="form-group">
-                    <label for="expenseCategory">Category</label>
-                    <select id="expenseCategory" required>
-                        <option value="">Select category</option>
-                        <option value="food">Food & Dining</option>
-                        <option value="transport">Transport</option>
-                        <option value="shopping">Shopping</option>
-                        <option value="bills">Bills & Utilities</option>
-                        <option value="entertainment">Entertainment</option>
-                        <option value="health">Health</option>
-                        <option value="education">Education</option>
-                        <option value="other">Other</option>
-                    </select>
+                    <label>Category</label>
+                    <div class="custom-select custom-select-form" id="expenseCategorySelect" data-value="" data-required="true">
+                        <div class="custom-select-trigger">
+                            <span>Select category</span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </div>
+                        <div class="custom-select-options">
+                            <div class="custom-option placeholder" data-value="">Select category</div>
+                            <div class="custom-option" data-value="food">Food & Dining</div>
+                            <div class="custom-option" data-value="transport">Transport</div>
+                            <div class="custom-option" data-value="shopping">Shopping</div>
+                            <div class="custom-option" data-value="bills">Bills & Utilities</div>
+                            <div class="custom-option" data-value="entertainment">Entertainment</div>
+                            <div class="custom-option" data-value="health">Health</div>
+                            <div class="custom-option" data-value="education">Education</div>
+                            <div class="custom-option" data-value="other">Other</div>
+                        </div>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="expenseDate">Date</label>
@@ -323,28 +374,34 @@
                         </svg>
                         Currency
                     </h4>
-                    <select id="settingsCurrency" class="settings-select">
-                        <option value="USD">$ USD - US Dollar</option>
-                        <option value="EUR">EUR - Euro</option>
-                        <option value="GBP">GBP - British Pound</option>
-                        <option value="INR">INR - Indian Rupee</option>
-                        <option value="JPY">JPY - Japanese Yen</option>
-                        <option value="CAD">CAD - Canadian Dollar</option>
-                        <option value="AUD">AUD - Australian Dollar</option>
-                        <option value="CNY">CNY - Chinese Yuan</option>
-                        <option value="KRW">KRW - Korean Won</option>
-                        <option value="BRL">BRL - Brazilian Real</option>
-                        <option value="MXN">MXN - Mexican Peso</option>
-                        <option value="NGN">NGN - Nigerian Naira</option>
-                        <option value="AED">AED - UAE Dirham</option>
-                        <option value="SAR">SAR - Saudi Riyal</option>
-                        <option value="ZAR">ZAR - South African Rand</option>
-                        <option value="SGD">SGD - Singapore Dollar</option>
-                        <option value="HKD">HKD - Hong Kong Dollar</option>
-                        <option value="SEK">SEK - Swedish Krona</option>
-                        <option value="NOK">NOK - Norwegian Krone</option>
-                        <option value="CHF">CHF - Swiss Franc</option>
-                    </select>
+                    <div class="custom-select custom-select-settings" id="settingsCurrencySelect" data-value="USD">
+                        <div class="custom-select-trigger">
+                            <span>$ USD - US Dollar</span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </div>
+                        <div class="custom-select-options">
+                            <div class="custom-option active" data-value="USD">$ USD - US Dollar</div>
+                            <div class="custom-option" data-value="EUR">EUR - Euro</div>
+                            <div class="custom-option" data-value="GBP">GBP - British Pound</div>
+                            <div class="custom-option" data-value="INR">INR - Indian Rupee</div>
+                            <div class="custom-option" data-value="JPY">JPY - Japanese Yen</div>
+                            <div class="custom-option" data-value="CAD">CAD - Canadian Dollar</div>
+                            <div class="custom-option" data-value="AUD">AUD - Australian Dollar</div>
+                            <div class="custom-option" data-value="CNY">CNY - Chinese Yuan</div>
+                            <div class="custom-option" data-value="KRW">KRW - Korean Won</div>
+                            <div class="custom-option" data-value="BRL">BRL - Brazilian Real</div>
+                            <div class="custom-option" data-value="MXN">MXN - Mexican Peso</div>
+                            <div class="custom-option" data-value="NGN">NGN - Nigerian Naira</div>
+                            <div class="custom-option" data-value="AED">AED - UAE Dirham</div>
+                            <div class="custom-option" data-value="SAR">SAR - Saudi Riyal</div>
+                            <div class="custom-option" data-value="ZAR">ZAR - South African Rand</div>
+                            <div class="custom-option" data-value="SGD">SGD - Singapore Dollar</div>
+                            <div class="custom-option" data-value="HKD">HKD - Hong Kong Dollar</div>
+                            <div class="custom-option" data-value="SEK">SEK - Swedish Krona</div>
+                            <div class="custom-option" data-value="NOK">NOK - Norwegian Krone</div>
+                            <div class="custom-option" data-value="CHF">CHF - Swiss Franc</div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Budget -->
@@ -360,6 +417,23 @@
                         <button id="settingsSetBudgetBtn" class="btn btn-primary">Save</button>
                     </div>
                     <p id="settingsBudgetHint" class="hint">No budget set</p>
+                </div>
+
+                <!-- Subscription -->
+                <div id="premiumSection" class="settings-section">
+                    <h4 class="settings-section-title">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                        Subscription
+                    </h4>
+                    <div id="premiumStatus"></div>
+                    <button id="upgradeBtn" class="btn btn-primary btn-full" onclick="openUpgradeModal()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                        Upgrade to Premium
+                    </button>
                 </div>
 
                 <!-- Data -->
@@ -390,6 +464,38 @@
                         </button>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upgrade Modal -->
+    <div id="upgradeModal" class="modal-overlay">
+        <div class="modal modal-upgrade">
+            <div class="modal-header">
+                <h3>Upgrade to Premium</h3>
+                <button id="closeUpgrade" class="btn-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="upgrade-body">
+                <div class="upgrade-price">
+                    <span class="price-amount">$5</span>
+                    <span class="price-period">/month</span>
+                </div>
+                <ul class="upgrade-features">
+                    <li>Unlimited expenses</li>
+                    <li>Full spending history</li>
+                    <li>CSV data export</li>
+                    <li>Priority support</li>
+                </ul>
+                <button id="checkoutBtn" class="btn btn-primary btn-full" onclick="startCheckout()">
+                    Subscribe Now
+                </button>
+                <p id="checkoutError" class="checkout-error"></p>
+                <p class="upgrade-note">Payments securely processed by Stripe.</p>
             </div>
         </div>
     </div>

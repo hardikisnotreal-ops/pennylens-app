@@ -46,6 +46,7 @@ let dailyChart = null;
 let authToken = localStorage.getItem('spendwise_token') || null;
 let currentUser = null;
 let syncTimeout = null;
+let isPremium = false;
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
@@ -59,6 +60,148 @@ async function api(endpoint, options = {}) {
     if (!res.ok) throw new Error(data.error || 'Request failed');
     return data;
 }
+
+// Custom Select Logic
+function initCustomSelects() {
+    document.querySelectorAll('.custom-select').forEach(select => {
+        const trigger = select.querySelector('.custom-select-trigger');
+        const options = select.querySelector('.custom-select-options');
+
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const wasOpen = select.classList.contains('open');
+            closeAllSelects();
+            if (!wasOpen) {
+                positionDropdown(select);
+                select.classList.add('open');
+            }
+        });
+    });
+
+    document.querySelectorAll('.custom-option').forEach(opt => {
+        opt.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const select = opt.closest('.custom-select');
+            if (!select) return;
+            const value = opt.dataset.value;
+            select.dataset.value = value;
+            select.querySelectorAll('.custom-option').forEach(o => o.classList.remove('active'));
+            opt.classList.add('active');
+            select.querySelector('.custom-select-trigger span').textContent = opt.textContent;
+            select.classList.remove('open');
+            select.dispatchEvent(new CustomEvent('change', { detail: { value } }));
+        });
+    });
+}
+
+function positionDropdown(select) {
+    const trigger = select.querySelector('.custom-select-trigger');
+    const options = select.querySelector('.custom-select-options');
+    const rect = trigger.getBoundingClientRect();
+
+    // Temporarily make visible to measure real height
+    options.style.transition = 'none';
+    options.style.visibility = 'hidden';
+    options.style.opacity = '0';
+    options.style.pointerEvents = 'none';
+    options.style.top = '0';
+    options.style.left = '0';
+    options.style.minWidth = rect.width + 'px';
+    options.style.maxWidth = Math.max(rect.width, 200) + 'px';
+    options.style.maxHeight = '320px';
+    options.style.display = 'block';
+    options.offsetHeight; // force reflow
+
+    const optRect = options.getBoundingClientRect();
+    const dropdownHeight = optRect.height || 280;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+
+    let top;
+    if (spaceBelow >= dropdownHeight + 8 || spaceBelow >= spaceAbove) {
+        top = rect.bottom + 6;
+    } else {
+        top = rect.top - dropdownHeight - 6;
+    }
+
+    // Set final position (transitions still disabled)
+    options.style.top = Math.max(4, top) + 'px';
+    options.style.left = rect.left + 'px';
+
+    // Clear the temporary overrides, let CSS handle visibility
+    options.style.visibility = '';
+    options.style.opacity = '';
+    options.style.pointerEvents = '';
+    options.style.display = '';
+    options.style.maxHeight = '';
+
+    // Force reflow then re-enable transitions
+    options.offsetHeight;
+    options.style.transition = '';
+}
+
+function closeAllSelects() {
+    document.querySelectorAll('.custom-select.open').forEach(s => s.classList.remove('open'));
+}
+
+document.addEventListener('click', closeAllSelects);
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeAllSelects();
+});
+
+function getCustomSelectValue(id) {
+    const el = document.getElementById(id);
+    return el ? el.dataset.value : '';
+}
+
+function setCustomSelectValue(id, value) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.dataset.value = value;
+    el.querySelectorAll('.custom-option').forEach(opt => {
+        opt.classList.toggle('active', opt.dataset.value === value);
+        if (opt.dataset.value === value) {
+            el.querySelector('.custom-select-trigger span').textContent = opt.textContent;
+        }
+    });
+}
+
+function populateCustomMonthFilter() {
+    const months = new Set();
+    expenses.forEach(e => months.add(getMonthKey(e.date)));
+
+    const select = document.getElementById('filterMonthSelect');
+    if (!select) return;
+    const current = select.dataset.value;
+    const optionsContainer = select.querySelector('.custom-select-options');
+    optionsContainer.innerHTML = '<div class="custom-option active" data-value="all">All Time</div>';
+
+    [...months].sort().reverse().forEach(m => {
+        const [y, mo] = m.split('-');
+        const label = new Date(y, mo - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        const div = document.createElement('div');
+        div.className = 'custom-option';
+        div.dataset.value = m;
+        div.textContent = label;
+        optionsContainer.appendChild(div);
+    });
+
+    // Restore selection
+    const matchOpt = optionsContainer.querySelector(`[data-value="${current}"]`);
+    if (matchOpt) {
+        optionsContainer.querySelectorAll('.custom-option').forEach(o => o.classList.remove('active'));
+        matchOpt.classList.add('active');
+        select.querySelector('.custom-select-trigger span').textContent = matchOpt.textContent;
+        select.dataset.value = current;
+    } else {
+        optionsContainer.querySelectorAll('.custom-option').forEach(o => o.classList.remove('active'));
+        optionsContainer.querySelector('[data-value="all"]').classList.add('active');
+        select.querySelector('.custom-select-trigger span').textContent = 'All Time';
+        select.dataset.value = 'all';
+    }
+}
+
+initCustomSelects();
 
 function setSyncStatus(status) {
     const el = $('#syncStatus');
@@ -151,8 +294,8 @@ function getCurrentMonthKey() {
 
 function getFilteredExpenses() {
     const search = $('#searchInput').value.toLowerCase();
-    const category = $('#filterCategory').value;
-    const month = $('#filterMonth').value;
+    const category = getCustomSelectValue('filterCategorySelect');
+    const month = getCustomSelectValue('filterMonthSelect');
 
     return expenses.filter(e => {
         const matchSearch = !search || e.note.toLowerCase().includes(search) || CATEGORIES[e.category].label.toLowerCase().includes(search);
@@ -378,7 +521,7 @@ function refreshAll() {
     renderExpenses();
     updateCategoryChart();
     updateDailyChart();
-    populateMonthFilter();
+    populateCustomMonthFilter();
 }
 
 function openModal(editMode = false) {
@@ -387,6 +530,11 @@ function openModal(editMode = false) {
     if (!editMode) {
         $('#expenseForm').reset();
         $('#expenseDate').value = new Date().toISOString().slice(0, 10);
+        setCustomSelectValue('expenseCategorySelect', '');
+        const catSelect = document.getElementById('expenseCategorySelect');
+        if (catSelect) {
+            catSelect.querySelector('.custom-select-trigger span').textContent = 'Select category';
+        }
     }
     $('#expenseAmount').focus();
 }
@@ -401,7 +549,7 @@ function editExpense(id) {
     if (!e) return;
     editingId = id;
     $('#expenseAmount').value = e.amount;
-    $('#expenseCategory').value = e.category;
+    setCustomSelectValue('expenseCategorySelect', e.category);
     $('#expenseDate').value = e.date;
     $('#expenseNote').value = e.note || '';
     openModal(true);
@@ -484,7 +632,7 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () 
 function openSettings() {
     const modal = $('#settingsModal');
     modal.classList.add('active');
-    $('#settingsCurrency').value = selectedCurrency;
+    setCustomSelectValue('settingsCurrencySelect', selectedCurrency);
     $('#settingsBudgetInput').value = budget > 0 ? budget : '';
     updateBudgetHint();
 }
@@ -508,7 +656,7 @@ $('#expenseModal').addEventListener('click', (e) => {
 $('#expenseForm').addEventListener('submit', (e) => {
     e.preventDefault();
     const amount = parseFloat($('#expenseAmount').value);
-    const category = $('#expenseCategory').value;
+    const category = getCustomSelectValue('expenseCategorySelect');
     const date = $('#expenseDate').value;
     const note = $('#expenseNote').value.trim();
 
@@ -532,8 +680,8 @@ $('#expenseForm').addEventListener('submit', (e) => {
 });
 
 $('#searchInput').addEventListener('input', renderExpenses);
-$('#filterCategory').addEventListener('change', renderExpenses);
-$('#filterMonth').addEventListener('change', renderExpenses);
+document.getElementById('filterCategorySelect').addEventListener('change', renderExpenses);
+document.getElementById('filterMonthSelect').addEventListener('change', renderExpenses);
 
 // Settings Events
 $('#settingsBtn').addEventListener('click', openSettings);
@@ -546,8 +694,8 @@ $('#themeLight').addEventListener('click', () => setTheme('light'));
 $('#themeDark').addEventListener('click', () => setTheme('dark'));
 $('#themeSystem').addEventListener('click', () => setTheme('system'));
 
-$('#settingsCurrency').addEventListener('change', (e) => {
-    selectedCurrency = e.target.value;
+document.getElementById('settingsCurrencySelect').addEventListener('change', (e) => {
+    selectedCurrency = e.detail.value;
     localStorage.setItem(CURRENCY_KEY, selectedCurrency);
     refreshAll();
     updateModalLabels();
@@ -604,6 +752,13 @@ function updateUserInfo() {
         $('#userName').textContent = currentUser.name;
         $('#userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
         $('#settingsEmail').textContent = currentUser.email;
+        // Mobile menu
+        const mobileName = $('#mobileName');
+        const mobileEmail = $('#mobileEmail');
+        const mobileAvatar = $('#mobileAvatar');
+        if (mobileName) mobileName.textContent = currentUser.name;
+        if (mobileEmail) mobileEmail.textContent = currentUser.email;
+        if (mobileAvatar) mobileAvatar.textContent = currentUser.name.charAt(0).toUpperCase();
     }
 }
 
@@ -627,6 +782,7 @@ async function handleLogin(email, password) {
         }
         showApp();
         updateUserInfo();
+        updatePremiumUI();
         initTheme();
         initCurrency();
         updateModalLabels();
@@ -651,6 +807,7 @@ async function handleRegister(name, email, password) {
         localStorage.setItem('spendwise_token', authToken);
         showApp();
         updateUserInfo();
+        updatePremiumUI();
         initTheme();
         initCurrency();
         updateModalLabels();
@@ -698,18 +855,182 @@ $('#showLogin').addEventListener('click', (e) => {
 $('#logoutBtn').addEventListener('click', logout);
 $('#settingsLogoutBtn').addEventListener('click', logout);
 
-// Init
+// Mobile menu
+$('#hamburgerBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const menu = $('#mobileMenu');
+    menu.classList.toggle('open');
+});
+
+$('#mobileSettingsBtn').addEventListener('click', () => {
+    $('#mobileMenu').classList.remove('open');
+    openSettings();
+});
+
+$('#mobileLogoutBtn').addEventListener('click', () => {
+    $('#mobileMenu').classList.remove('open');
+    logout();
+});
+
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('#mobileMenu') && !e.target.closest('#hamburgerBtn')) {
+        $('#mobileMenu').classList.remove('open');
+    }
+});
+$('#closeUpgrade').addEventListener('click', closeUpgradeModal);
+$('#upgradeModal').addEventListener('click', (e) => {
+    if (e.target === $('#upgradeModal')) closeUpgradeModal();
+});
+
+// Micro-interactions
+function animateValue(el, start, end, duration = 600) {
+    const startTime = performance.now();
+    const isNeg = end < 0;
+    const absEnd = Math.abs(end);
+
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = start + (absEnd - start) * eased;
+        el.textContent = formatCurrency(isNeg ? -current : current);
+        if (progress < 1) requestAnimationFrame(update);
+    }
+    requestAnimationFrame(update);
+}
+
+function initRipple() {
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.btn, .btn-icon');
+        if (!btn) return;
+        const rect = btn.getBoundingClientRect();
+        btn.style.setProperty('--ripple-x', ((e.clientX - rect.left) / rect.width * 100) + '%');
+        btn.style.setProperty('--ripple-y', ((e.clientY - rect.top) / rect.height * 100) + '%');
+    });
+}
+
+initRipple();
+
+// Override updateSummary to use animated counter
+const _origUpdateSummary = updateSummary;
+updateSummary = function() {
+    const current = getCurrentMonthExpenses();
+    const total = current.reduce((sum, e) => sum + e.amount, 0);
+
+    const countEl = $('#expenseCount');
+    countEl.textContent = `${current.length} expense${current.length !== 1 ? 's' : ''} this month`;
+
+    const totalEl = $('#totalSpent');
+    const prevText = totalEl.textContent;
+    const prevVal = parseFloat(prevText.replace(/[^0-9.-]/g, '')) || 0;
+    animateValue(totalEl, prevVal, total);
+
+    if (budget > 0) {
+        const remaining = budget - total;
+        const pct = Math.min((total / budget) * 100, 100);
+        const remEl = $('#budgetRemaining');
+        const prevRem = parseFloat(remEl.textContent.replace(/[^0-9.-]/g, '')) || 0;
+        animateValue(remEl, prevRem, Math.max(remaining, 0));
+        $('#budgetBar').style.width = pct + '%';
+
+        $('#budgetBar').className = 'budget-bar';
+        if (pct >= 90) $('#budgetBar').classList.add('danger');
+        else if (pct >= 70) $('#budgetBar').classList.add('warning');
+
+        remEl.style.color = remaining < 0 ? 'var(--danger)' : '';
+    } else {
+        $('#budgetRemaining').textContent = formatCurrency(0);
+        $('#budgetBar').style.width = '0%';
+        $('#budgetRemaining').style.color = '';
+    }
+
+    const catTotals = {};
+    current.forEach(e => {
+        catTotals[e.category] = (catTotals[e.category] || 0) + e.amount;
+    });
+
+    const topCat = Object.entries(catTotals).sort((a, b) => b[1] - a[1])[0];
+    if (topCat) {
+        $('#topCategory').textContent = CATEGORIES[topCat[0]].icon + ' ' + CATEGORIES[topCat[0]].label;
+        $('#topCategoryAmount').textContent = formatCurrency(topCat[1]) + ' spent';
+    } else {
+        $('#topCategory').textContent = '-';
+        $('#topCategoryAmount').textContent = 'No data';
+    }
+};
+
 function updateModalLabels() {
     const sym = getCurrencySymbol();
     $('label[for="expenseAmount"]').textContent = `Amount (${sym})`;
 }
 
+function updatePremiumUI() {
+    const statusEl = $('#premiumStatus');
+    const upgradeBtn = $('#upgradeBtn');
+    const premiumBadge = document.querySelector('.premium-badge');
+
+    if (!currentUser) return;
+    isPremium = !!currentUser.premium;
+
+    if (isPremium) {
+        statusEl.innerHTML = `<p class="premium-active">Premium Active</p>`;
+        if (upgradeBtn) upgradeBtn.style.display = 'none';
+        if (!premiumBadge) {
+            const badge = document.createElement('span');
+            badge.className = 'premium-badge';
+            badge.textContent = 'PRO';
+            document.querySelector('.user-badge').appendChild(badge);
+        }
+    } else {
+        statusEl.innerHTML = `<p class="premium-expired">Free Plan — 50 expenses, current month only</p>`;
+        if (upgradeBtn) upgradeBtn.style.display = '';
+        if (premiumBadge) premiumBadge.remove();
+    }
+}
+
+function openUpgradeModal() {
+    $('#upgradeModal').classList.add('active');
+}
+
+function closeUpgradeModal() {
+    $('#upgradeModal').classList.remove('active');
+}
+
+async function startCheckout() {
+    const errEl = $('#checkoutError');
+    errEl.classList.remove('visible');
+    const btn = $('#checkoutBtn');
+    btn.disabled = true;
+    btn.textContent = 'Redirecting...';
+
+    try {
+        const data = await api('/api/checkout', { method: 'POST' });
+        if (data.url) {
+            window.location.href = data.url;
+        } else {
+            throw new Error(data.error || 'Failed to start checkout');
+        }
+    } catch (err) {
+        errEl.textContent = err.message;
+        errEl.classList.add('visible');
+        btn.disabled = false;
+        btn.textContent = 'Subscribe Now';
+    }
+}
+
 function initCurrency() {
-    $('#settingsCurrency').value = selectedCurrency;
+    setCustomSelectValue('settingsCurrencySelect', selectedCurrency);
 }
 
 async function init() {
     initTheme();
+
+    // Handle Stripe checkout success redirect
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('upgraded') === 'true') {
+        window.history.replaceState({}, '', '/');
+    }
+
     if (authToken) {
         try {
             const data = await api('/api/auth/me');
@@ -719,13 +1040,23 @@ async function init() {
             if (currentUser.theme) localStorage.setItem(THEME_KEY, currentUser.theme);
             showApp();
             updateUserInfo();
+            updatePremiumUI();
             initTheme();
             initCurrency();
             updateModalLabels();
             await loadExpensesFromServer();
             refreshAll();
-        } catch {
-            logout();
+
+            if (params.get('upgraded') === 'true' && currentUser.premium) {
+                setTimeout(() => alert('Premium activated! You now have unlimited access.'), 500);
+            }
+        } catch (err) {
+            if (err.message === 'Invalid token' || err.message === 'No token provided') {
+                logout();
+            } else {
+                showApp();
+                refreshAll();
+            }
         }
     } else {
         showAuth();
