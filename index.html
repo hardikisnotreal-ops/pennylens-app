@@ -9,8 +9,191 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Landing Page -->
+    <div id="landingPage" class="landing">
+        <nav class="landing-nav">
+            <div class="landing-logo">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+                <span>SpendWise</span>
+            </div>
+            <div class="landing-nav-actions">
+                <button class="btn btn-secondary" onclick="showScreen('auth')">Sign In</button>
+                <button class="btn btn-primary" onclick="showScreen('auth'); switchToRegister()">Get Started</button>
+            </div>
+        </nav>
+
+        <section class="hero">
+            <div class="hero-content">
+                <div class="hero-badge">Smart Expense Tracking</div>
+                <h1>Take Control of<br>Your <span class="gradient-text">Money</span></h1>
+                <p class="hero-sub">Track every dollar, set budgets, visualize spending patterns, and build better financial habits — all in one beautiful app.</p>
+                <div class="hero-actions">
+                    <button class="btn btn-primary btn-lg" onclick="showScreen('auth'); switchToRegister()">
+                        Start Tracking Free
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                    </button>
+                    <button class="btn btn-secondary btn-lg" onclick="document.getElementById('featuresSection').scrollIntoView({behavior:'smooth'})">
+                        See Features
+                    </button>
+                </div>
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <strong>8</strong>
+                        <span>Categories</span>
+                    </div>
+                    <div class="hero-stat-divider"></div>
+                    <div class="hero-stat">
+                        <strong>20</strong>
+                        <span>Currencies</span>
+                    </div>
+                    <div class="hero-stat-divider"></div>
+                    <div class="hero-stat">
+                        <strong>3</strong>
+                        <span>Themes</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="hero-card glass-card">
+                    <div class="hero-card-header">
+                        <span class="hero-card-dot green"></span>
+                        <span class="hero-card-dot yellow"></span>
+                        <span class="hero-card-dot red"></span>
+                    </div>
+                    <div class="hero-card-body">
+                        <div class="hero-card-row">
+                            <span class="hero-cat" style="background:rgba(251,191,36,0.15)">Food</span>
+                            <span class="hero-amount">-$42.50</span>
+                        </div>
+                        <div class="hero-card-row">
+                            <span class="hero-cat" style="background:rgba(99,102,241,0.15)">Bills</span>
+                            <span class="hero-amount">-$120.00</span>
+                        </div>
+                        <div class="hero-card-row">
+                            <span class="hero-cat" style="background:rgba(236,72,153,0.15)">Shopping</span>
+                            <span class="hero-amount">-$89.99</span>
+                        </div>
+                        <div class="hero-card-row">
+                            <span class="hero-cat" style="background:rgba(16,185,129,0.15)">Transport</span>
+                            <span class="hero-amount">-$25.00</span>
+                        </div>
+                        <div class="hero-card-total">
+                            <span>Total</span>
+                            <strong>-$277.49</strong>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-floating-card glass-card fc-1">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline></svg>
+                    <span>On Budget</span>
+                </div>
+                <div class="hero-floating-card glass-card fc-2">
+                    <span>73%</span>
+                    <span class="fc-label">Saved</span>
+                </div>
+            </div>
+        </section>
+
+        <section id="featuresSection" class="features">
+            <h2>Everything You Need</h2>
+            <p class="section-sub">Powerful features wrapped in a beautiful interface</p>
+            <div class="features-grid">
+                <div class="feature-card glass-card">
+                    <div class="feature-icon" style="background:rgba(99,102,241,0.12)">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path></svg>
+                    </div>
+                    <h3>Expense Tracking</h3>
+                    <p>Log expenses in seconds with categories, notes, and dates. Stay on top of every purchase.</p>
+                </div>
+                <div class="feature-card glass-card">
+                    <div class="feature-icon" style="background:rgba(16,185,129,0.12)">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"></path><path d="M18 20V4"></path><path d="M6 20v-4"></path></svg>
+                    </div>
+                    <h3>Visual Charts</h3>
+                    <p>Beautiful doughnut and bar charts show where your money goes each month.</p>
+                </div>
+                <div class="feature-card glass-card">
+                    <div class="feature-icon" style="background:rgba(236,72,153,0.12)">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    </div>
+                    <h3>Budget Alerts</h3>
+                    <p>Set monthly budgets and watch the progress bar. Get warned before you overspend.</p>
+                </div>
+                <div class="feature-card glass-card">
+                    <div class="feature-icon" style="background:rgba(245,158,11,0.12)">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                    </div>
+                    <h3>20 Currencies</h3>
+                    <p>Track expenses in any currency from USD to YEN. Perfect for travelers and global users.</p>
+                </div>
+                <div class="feature-card glass-card">
+                    <div class="feature-icon" style="background:rgba(139,92,246,0.12)">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    </div>
+                    <h3>Cloud Sync</h3>
+                    <p>Create an account to sync expenses across devices. Your data is always safe.</p>
+                </div>
+                <div class="feature-card glass-card">
+                    <div class="feature-icon" style="background:rgba(239,68,68,0.12)">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+                    </div>
+                    <h3>CSV Export</h3>
+                    <p>Download all your expenses as CSV for taxes, reports, or personal analysis.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="about">
+            <div class="about-content">
+                <h2>About SpendWise</h2>
+                <p>SpendWise is a personal finance tracker built to make expense management simple, beautiful, and accessible to everyone.</p>
+                <div class="about-details">
+                    <div class="about-item">
+                        <strong>Made by</strong>
+                        <span>Hardik (hardikisnotreal-ops)</span>
+                    </div>
+                    <div class="about-item">
+                        <strong>Built with</strong>
+                        <span>Node.js, Express, Chart.js, Vanilla JS</span>
+                    </div>
+                    <div class="about-item">
+                        <strong>Design</strong>
+                        <span>Glassmorphism UI with Dark & Light themes</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="landing-footer">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="1" x2="12" y2="23"></line>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                    <span>SpendWise</span>
+                </div>
+                <div class="footer-links">
+                    <a href="https://github.com/hardikisnotreal-ops" target="_blank" rel="noopener">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                    </a>
+                    <a href="https://twitter.com" target="_blank" rel="noopener">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    </a>
+                    <a href="https://youtube.com" target="_blank" rel="noopener">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                    </a>
+                </div>
+                <p class="footer-copy">Made with care by Hardik. Track smarter, spend better.</p>
+            </div>
+        </footer>
+    </div>
+
     <!-- Auth Screen -->
-    <div id="authScreen" class="auth-screen">
+    <div id="authScreen" class="auth-screen" style="display:none;">
         <div class="auth-container">
             <div class="auth-logo">
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -61,6 +244,10 @@
                     <button type="submit" class="btn btn-primary btn-full">Create Account</button>
                 </form>
                 <p class="auth-switch">Already have an account? <a href="#" id="showLogin">Sign in</a></p>
+            </div>
+            <div class="auth-skip">
+                <a href="#" id="skipAuth">Use without account</a>
+                <p class="auth-skip-hint">Data saved locally on this device</p>
             </div>
         </div>
     </div>
@@ -497,6 +684,48 @@
                 <p id="checkoutError" class="checkout-error"></p>
                 <p class="upgrade-note">Payments securely processed by Stripe.</p>
             </div>
+        </div>
+    </div>
+
+    <!-- AI Chatbot -->
+    <div id="chatbotToggle" class="chatbot-toggle" title="Money Assistant">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+    </div>
+    <div id="chatbotWindow" class="chatbot-window">
+        <div class="chatbot-header">
+            <div class="chatbot-header-info">
+                <div class="chatbot-avatar">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                </div>
+                <div>
+                    <strong>Money Assistant</strong>
+                    <span class="chatbot-status">Ask me anything about finances</span>
+                </div>
+            </div>
+            <button id="chatbotClose" class="btn-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+        <div id="chatbotMessages" class="chatbot-messages">
+            <div class="chat-msg bot">
+                <div class="chat-msg-avatar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                </div>
+                <div class="chat-msg-bubble">Hi! I'm your Money Assistant. I can help with budgeting tips, saving strategies, and financial advice. What would you like to know?</div>
+            </div>
+        </div>
+        <div class="chatbot-suggestions">
+            <button class="chat-suggestion" data-q="how to save money">How to save money</button>
+            <button class="chat-suggestion" data-q="budget tips">Budget tips</button>
+            <button class="chat-suggestion" data-q="investing basics">Investing basics</button>
+        </div>
+        <div class="chatbot-input-area">
+            <input type="text" id="chatbotInput" placeholder="Ask about money management...">
+            <button id="chatbotSend" class="btn btn-primary btn-sm">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </button>
         </div>
     </div>
 

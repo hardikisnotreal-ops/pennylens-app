@@ -728,15 +728,54 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
+// Screen management
+function showScreen(screen) {
+    $('#landingPage').style.display = 'none';
+    $('#authScreen').style.display = 'none';
+    $('#appMain').style.display = 'none';
+    if (screen === 'landing') $('#landingPage').style.display = 'block';
+    else if (screen === 'auth') { $('#authScreen').style.display = 'flex'; }
+    else if (screen === 'app') $('#appMain').style.display = 'block';
+}
+
+function switchToRegister() {
+    $('#loginForm').style.display = 'none';
+    $('#registerForm').style.display = 'block';
+}
+
+function switchToLogin() {
+    $('#registerForm').style.display = 'none';
+    $('#loginForm').style.display = 'block';
+}
+
+// Skip auth - use locally
+let isLocalMode = false;
+
+function enterLocalMode() {
+    isLocalMode = true;
+    authToken = null;
+    currentUser = { name: 'Guest', email: 'Local Mode' };
+    selectedCurrency = localStorage.getItem(CURRENCY_KEY) || 'USD';
+    budget = parseFloat(localStorage.getItem(BUDGET_KEY)) || 0;
+    const saved = localStorage.getItem(STORAGE_KEY);
+    expenses = saved ? JSON.parse(saved) : [];
+    showScreen('app');
+    updateUserInfo();
+    updatePremiumUI();
+    initTheme();
+    initCurrency();
+    updateModalLabels();
+    refreshAll();
+}
+
 // Auth
 function showAuth() {
-    $('#authScreen').style.display = 'flex';
-    $('#appMain').style.display = 'none';
+    showScreen('auth');
 }
 
 function showApp() {
-    $('#authScreen').style.display = 'none';
-    $('#appMain').style.display = 'block';
+    isLocalMode = false;
+    showScreen('app');
 }
 
 function updateUserInfo() {
@@ -813,12 +852,13 @@ async function handleRegister(name, email, password) {
 function logout() {
     authToken = null;
     currentUser = null;
+    isLocalMode = false;
     localStorage.removeItem('spendwise_token');
     expenses = [];
     budget = 0;
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(BUDGET_KEY);
-    showAuth();
+    showScreen('landing');
 }
 
 // Auth form events
@@ -834,14 +874,18 @@ $('#registerSubmit').addEventListener('submit', (e) => {
 
 $('#showRegister').addEventListener('click', (e) => {
     e.preventDefault();
-    $('#loginForm').style.display = 'none';
-    $('#registerForm').style.display = 'block';
+    switchToRegister();
 });
 
 $('#showLogin').addEventListener('click', (e) => {
     e.preventDefault();
-    $('#registerForm').style.display = 'none';
-    $('#loginForm').style.display = 'block';
+    switchToLogin();
+});
+
+// Skip auth
+$('#skipAuth').addEventListener('click', (e) => {
+    e.preventDefault();
+    enterLocalMode();
 });
 
 $('#logoutBtn').addEventListener('click', logout);
@@ -1016,6 +1060,7 @@ function initCurrency() {
 
 async function init() {
     initTheme();
+    initChatbot();
 
     // Handle Stripe checkout success redirect
     const params = new URLSearchParams(window.location.search);
@@ -1051,8 +1096,174 @@ async function init() {
             }
         }
     } else {
-        showAuth();
+        showScreen('landing');
     }
+}
+
+// AI Money Assistant Chatbot
+const CHAT_RESPONSES = {
+    'save money|saving|savings': [
+        "Here are proven ways to save more money:",
+        "1. The 50/30/20 Rule: 50% needs, 30% wants, 20% savings",
+        "2. Automate savings - set up auto-transfers on payday",
+        "3. Track every expense (that's what SpendWise helps with!)",
+        "4. Cancel unused subscriptions",
+        "5. Use the 24-hour rule before big purchases",
+        "6. Cook at home more - eating out is the #1 budget killer",
+        "7. Shop with a list and never browse without one"
+    ],
+    'budget|budgeting': [
+        "Budgeting is the foundation of financial health:",
+        "1. Start by tracking ALL expenses for a month",
+        "2. Categorize spending (food, bills, transport, etc.)",
+        "3. Set realistic limits per category",
+        "4. Use SpendWise's built-in budget tracker!",
+        "5. Review and adjust your budget monthly",
+        "6. The envelope system works great for variable expenses",
+        "7. Always budget for unexpected costs (add 10% buffer)"
+    ],
+    'invest|investing|stocks|mutual fund': [
+        "Investing basics everyone should know:",
+        "1. Start early - compound interest is powerful",
+        "2. Build an emergency fund first (3-6 months expenses)",
+        "3. Index funds are great for beginners (low fees, diversified)",
+        "4. Never invest money you'll need within 5 years",
+        "5. Diversify - don't put all eggs in one basket",
+        "6. Automate investments with SIPs (Systematic Investment Plans)",
+        "7. Stay consistent - don't panic during market dips"
+    ],
+    'debt|loan|credit card': [
+        "Debt management strategies:",
+        "1. Avalanche method: Pay highest interest rate first",
+        "2. Snowball method: Pay smallest balance first (motivational)",
+        "3. Never pay just the minimum on credit cards",
+        "4. Consider balance transfer for high-interest cards",
+        "5. Avoid lifestyle inflation when income increases",
+        "6. Negotiate lower interest rates with your bank",
+        "7. Stop using credit cards while paying off debt"
+    ],
+    'income|side hustle|earn more|make money': [
+        "Ways to increase your income:",
+        "1. Freelancing - leverage your existing skills",
+        "2. Start a side business (online services are easiest)",
+        "3. Sell unused items around your home",
+        "4. Ask for a raise (prepare with evidence of your value)",
+        "5. Learn high-income skills (coding, design, sales)",
+        "6. Rent out a room or parking space",
+        "7. Create digital products (courses, templates, ebooks)"
+    ],
+    'tax|taxes': [
+        "Smart tax strategies:",
+        "1. Keep receipts for all business expenses",
+        "2. Maximize retirement contributions (tax benefits)",
+        "3. Use tax-advantaged accounts (401k, IRA, etc.)",
+        "4. Track deductible expenses throughout the year",
+        "5. Consider consulting a tax professional for complex situations",
+        "6. Don't wait until last minute to file",
+        "7. Use SpendWise to export CSV for easy tax reporting!"
+    ],
+    'emergency fund|emergency': [
+        "Emergency fund essentials:",
+        "1. Goal: 3-6 months of essential living expenses",
+        "2. Keep it in a high-yield savings account",
+        "3. Don't invest your emergency fund",
+        "4. Build it gradually - even $50/month helps",
+        "5. Only use it for TRUE emergencies (job loss, medical)",
+        "6. Replenish it immediately after using it",
+        "7. Your emergency fund is your #1 financial priority"
+    ],
+    'hello|hi|hey|help|what can you do': [
+        "Hi there! I'm your Money Assistant. Here's what I can help with:",
+        "- Saving money tips and strategies",
+        "- Budgeting advice",
+        "- Investment basics",
+        "- Debt management",
+        "- Ways to increase income",
+        "- Tax planning tips",
+        "- Emergency fund guidance",
+        "Just ask me anything about personal finance!"
+    ],
+    'thanks|thank you|thx': [
+        "You're welcome! Remember, small steps lead to big financial changes. You've got this!"
+    ],
+    'tip|advice|suggest': [
+        "Here's a quick money tip: Pay yourself first! Before paying bills or spending, transfer at least 10% of your income to savings. It's the simplest wealth-building habit."
+    ],
+    'retirement|401k|pension': [
+        "Retirement planning basics:",
+        "1. Start NOW - even small amounts compound over decades",
+        "2. Max out employer 401k match (it's free money!)",
+        "3. Consider a Roth IRA for tax-free growth",
+        "4. Aim to save 15-20% of income for retirement",
+        "5. Don't withdraw early - penalties are steep",
+        "6. Rebalance your portfolio annually",
+        "7. Use a retirement calculator to set targets"
+    ]
+};
+
+function getChatResponse(input) {
+    const lower = input.toLowerCase().trim();
+    for (const [keywords, responses] of Object.entries(CHAT_RESPONSES)) {
+        const patterns = keywords.split('|');
+        if (patterns.some(p => lower.includes(p))) {
+            return responses;
+        }
+    }
+    const fallbacks = [
+        "That's a great question! Here's some general advice: Track your spending first (SpendWise makes this easy!), set clear financial goals, and review your progress monthly. What specific area would you like help with?",
+        "I'm not sure about that specific topic, but I can help with: saving money, budgeting, investing basics, debt management, increasing income, tax tips, and emergency funds. Try asking about any of these!",
+        "Great question! While I may not have a specific answer for that, I recommend the 50/30/20 rule as a starting point: 50% on needs, 30% on wants, and 20% on savings. Want to know more about budgeting?"
+    ];
+    return [fallbacks[Math.floor(Math.random() * fallbacks.length)]];
+}
+
+function addChatMessage(text, isBot) {
+    const container = $('#chatbotMessages');
+    const div = document.createElement('div');
+    div.className = `chat-msg ${isBot ? 'bot' : 'user'}`;
+    if (isBot) {
+        div.innerHTML = `<div class="chat-msg-avatar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div><div class="chat-msg-bubble">${text}</div>`;
+    } else {
+        div.innerHTML = `<div class="chat-msg-bubble">${text}</div>`;
+    }
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+}
+
+function handleChatInput() {
+    const input = $('#chatbotInput');
+    const text = input.value.trim();
+    if (!text) return;
+    addChatMessage(text, false);
+    input.value = '';
+    setTimeout(() => {
+        const responses = getChatResponse(text);
+        responses.forEach((line, i) => {
+            setTimeout(() => addChatMessage(line, true), i * 300);
+        });
+    }, 500);
+}
+
+function initChatbot() {
+    const toggle = $('#chatbotToggle');
+    const chatWindow = $('#chatbotWindow');
+    const close = $('#chatbotClose');
+    const send = $('#chatbotSend');
+    const input = $('#chatbotInput');
+    if (!toggle) return;
+    toggle.addEventListener('click', () => {
+        chatWindow.classList.toggle('open');
+        if (chatWindow.classList.contains('open')) input.focus();
+    });
+    close.addEventListener('click', () => chatWindow.classList.remove('open'));
+    send.addEventListener('click', handleChatInput);
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleChatInput(); });
+    document.querySelectorAll('.chat-suggestion').forEach(btn => {
+        btn.addEventListener('click', () => {
+            input.value = btn.dataset.q;
+            handleChatInput();
+        });
+    });
 }
 
 init();
