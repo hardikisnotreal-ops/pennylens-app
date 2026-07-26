@@ -1383,6 +1383,10 @@ input::placeholder {
     font-size: 0.875rem;
 }
 
+.custom-select-options {
+    display: none;
+}
+
 .custom-select-trigger {
     display: flex;
     align-items: center;
