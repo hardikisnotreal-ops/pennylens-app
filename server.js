@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const path = require('path');
 const fs = require('fs');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -21,6 +22,33 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname)));
 
 const FREE_EXPENSE_LIMIT = 50;
+
+// Rate limiters
+const generalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 200,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many requests, please try again later.' }
+});
+
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many login attempts. Please wait 15 minutes.' }
+});
+
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many API requests. Please slow down.' }
+});
+
+app.use(generalLimiter);
 
 function loadDB() {
     if (fs.existsSync(DB_FILE)) {
@@ -57,7 +85,7 @@ function userResponse(user) {
 }
 
 // Auth Routes
-app.post('/api/auth/register', (req, res) => {
+app.post('/api/auth/register', authLimiter, (req, res) => {
     try {
         const { email, name, password } = req.body;
         if (!email || !name || !password) {
@@ -89,7 +117,7 @@ app.post('/api/auth/register', (req, res) => {
     }
 });
 
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', authLimiter, (req, res) => {
     try {
         const { email, password } = req.body;
         if (!email || !password) {
@@ -200,7 +228,7 @@ app.post('/api/expenses/sync', authMiddleware, (req, res) => {
 });
 
 // Stripe Routes
-app.post('/api/checkout', authMiddleware, async (req, res) => {
+app.post('/api/checkout', apiLimiter, authMiddleware, async (req, res) => {
     try {
         if (!stripe) {
             return res.status(500).json({ error: 'Payments not configured. Add STRIPE_SECRET_KEY.' });

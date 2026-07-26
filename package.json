@@ -1,14 +1,15 @@
 {
-  "name": "spendwise",
+  "name": "pennylens",
   "version": "1.0.0",
-  "description": "SpendWise Expense Tracker with Auth",
+  "description": "PennyLens - Smart Expense Tracker",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
     "bcryptjs": "^2.4.3",
+    "express": "^4.18.2",
+    "express-rate-limit": "^8.6.0",
     "jsonwebtoken": "^9.0.2",
     "stripe": "^14.0.0"
   }
