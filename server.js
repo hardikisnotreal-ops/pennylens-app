@@ -287,6 +287,6 @@ app.get('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`SpendWise running at http://localhost:${PORT}`);
+    console.log(`PennyLens running at http://localhost:${PORT}`);
     if (!STRIPE_SECRET) console.log('Stripe not configured. Set STRIPE_SECRET_KEY to enable payments.');
 });

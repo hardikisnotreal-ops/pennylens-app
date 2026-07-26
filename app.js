@@ -1111,7 +1111,7 @@ const CHAT_RESPONSES = {
         "Here are proven ways to save more money:",
         "1. The 50/30/20 Rule: 50% needs, 30% wants, 20% savings",
         "2. Automate savings - set up auto-transfers on payday",
-        "3. Track every expense (that's what SpendWise helps with!)",
+        "3. Track every expense (that's what PennyLens helps with!)",
         "4. Cancel unused subscriptions",
         "5. Use the 24-hour rule before big purchases",
         "6. Cook at home more - eating out is the #1 budget killer",
@@ -1122,7 +1122,7 @@ const CHAT_RESPONSES = {
         "1. Start by tracking ALL expenses for a month",
         "2. Categorize spending (food, bills, transport, etc.)",
         "3. Set realistic limits per category",
-        "4. Use SpendWise's built-in budget tracker!",
+        "4. Use PennyLens's built-in budget tracker!",
         "5. Review and adjust your budget monthly",
         "6. The envelope system works great for variable expenses",
         "7. Always budget for unexpected costs (add 10% buffer)"
@@ -1165,7 +1165,7 @@ const CHAT_RESPONSES = {
         "4. Track deductible expenses throughout the year",
         "5. Consider consulting a tax professional for complex situations",
         "6. Don't wait until last minute to file",
-        "7. Use SpendWise to export CSV for easy tax reporting!"
+        "7. Use PennyLens to export CSV for easy tax reporting!"
     ],
     'emergency fund|emergency': [
         "Emergency fund essentials:",
@@ -1215,7 +1215,7 @@ function getChatResponse(input) {
         }
     }
     const fallbacks = [
-        "That's a great question! Here's some general advice: Track your spending first (SpendWise makes this easy!), set clear financial goals, and review your progress monthly. What specific area would you like help with?",
+        "That's a great question! Here's some general advice: Track your spending first (PennyLens makes this easy!), set clear financial goals, and review your progress monthly. What specific area would you like help with?",
         "I'm not sure about that specific topic, but I can help with: saving money, budgeting, investing basics, debt management, increasing income, tax tips, and emergency funds. Try asking about any of these!",
         "Great question! While I may not have a specific answer for that, I recommend the 50/30/20 rule as a starting point: 50% on needs, 30% on wants, and 20% on savings. Want to know more about budgeting?"
     ];
