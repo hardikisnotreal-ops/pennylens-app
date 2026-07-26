@@ -616,9 +616,8 @@ function setTheme(mode) {
 function updateThemeButtons() {
     const current = getStoredTheme();
     $$('.theme-option').forEach(btn => btn.classList.remove('active'));
-    if (current === 'light') $('#themeLight').classList.add('active');
-    else if (current === 'dark') $('#themeDark').classList.add('active');
-    else $('#themeSystem').classList.add('active');
+    const map = { light: 'themeLight', dark: 'themeDark', system: 'themeSystem', ocean: 'themeOcean', sunset: 'themeSunset', neon: 'themeNeon', rose: 'themeRose', forest: 'themeForest' };
+    if (map[current]) $(`#${map[current]}`).classList.add('active');
 }
 
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
@@ -690,6 +689,11 @@ $('#settingsModal').addEventListener('click', (e) => {
 $('#themeLight').addEventListener('click', () => setTheme('light'));
 $('#themeDark').addEventListener('click', () => setTheme('dark'));
 $('#themeSystem').addEventListener('click', () => setTheme('system'));
+$('#themeOcean').addEventListener('click', () => setTheme('ocean'));
+$('#themeSunset').addEventListener('click', () => setTheme('sunset'));
+$('#themeNeon').addEventListener('click', () => setTheme('neon'));
+$('#themeRose').addEventListener('click', () => setTheme('rose'));
+$('#themeForest').addEventListener('click', () => setTheme('forest'));
 
 document.getElementById('settingsCurrencySelect').addEventListener('change', (e) => {
     selectedCurrency = e.detail.value;
