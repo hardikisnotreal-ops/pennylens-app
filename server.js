@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const path = require('path');
 const fs = require('fs');
 const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -18,10 +19,71 @@ if (STRIPE_SECRET) {
     stripe = require('stripe')(STRIPE_SECRET);
 }
 
-app.use(express.json({ limit: '10mb' }));
+// Security headers
+app.use(helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+}));
+
+// CORS - restrict to own domain
+app.use((req, res, next) => {
+    const origin = req.headers.origin || `http://localhost:${PORT}`;
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    if (req.method === 'OPTIONS') return res.sendStatus(204);
+    next();
+});
+
+app.use(express.json({ limit: '1mb' }));
 app.use(express.static(path.join(__dirname)));
 
 const FREE_EXPENSE_LIMIT = 50;
+
+// Input sanitization - strip HTML/script tags
+function sanitize(str) {
+    if (typeof str !== 'string') return str;
+    return str.replace(/[<>]/g, '').trim().slice(0, 500);
+}
+
+function sanitizeBody(body) {
+    if (!body || typeof body !== 'object') return body;
+    const clean = {};
+    for (const [key, val] of Object.entries(body)) {
+        clean[key] = typeof val === 'string' ? sanitize(val) : val;
+    }
+    return clean;
+}
+
+// Account lockout system
+const loginAttempts = new Map(); // email -> { count, lockedUntil }
+const LOCKOUT_THRESHOLD = 5;
+const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 min
+
+function checkLockout(email) {
+    const record = loginAttempts.get(email);
+    if (!record) return false;
+    if (record.lockedUntil && Date.now() < record.lockedUntil) return true;
+    if (record.lockedUntil && Date.now() >= record.lockedUntil) {
+        loginAttempts.delete(email);
+        return false;
+    }
+    return false;
+}
+
+function recordFailedAttempt(email) {
+    const record = loginAttempts.get(email) || { count: 0, lockedUntil: null };
+    record.count++;
+    if (record.count >= LOCKOUT_THRESHOLD) {
+        record.lockedUntil = Date.now() + LOCKOUT_DURATION;
+    }
+    loginAttempts.set(email, record);
+}
+
+function clearAttempts(email) {
+    loginAttempts.delete(email);
+}
 
 // Rate limiters
 const generalLimiter = rateLimit({
@@ -47,6 +109,15 @@ const apiLimiter = rateLimit({
     legacyHeaders: false,
     message: { error: 'Too many API requests. Please slow down.' }
 });
+
+// Password strength check
+function isStrongPassword(pw) {
+    if (pw.length < 8) return false;
+    if (!/[A-Z]/.test(pw)) return false;
+    if (!/[a-z]/.test(pw)) return false;
+    if (!/[0-9]/.test(pw)) return false;
+    return true;
+}
 
 app.use(generalLimiter);
 
@@ -87,12 +158,15 @@ function userResponse(user) {
 // Auth Routes
 app.post('/api/auth/register', authLimiter, (req, res) => {
     try {
-        const { email, name, password } = req.body;
+        const { email, name, password } = sanitizeBody(req.body);
         if (!email || !name || !password) {
             return res.status(400).json({ error: 'All fields are required' });
         }
-        if (password.length < 6) {
-            return res.status(400).json({ error: 'Password must be at least 6 characters' });
+        if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).json({ error: 'Invalid email format' });
+        }
+        if (!isStrongPassword(password)) {
+            return res.status(400).json({ error: 'Password must be 8+ characters with uppercase, lowercase, and a number' });
         }
 
         const db = loadDB();
@@ -100,12 +174,13 @@ app.post('/api/auth/register', authLimiter, (req, res) => {
             return res.status(400).json({ error: 'Email already registered' });
         }
 
-        const hash = bcrypt.hashSync(password, 10);
+        const hash = bcrypt.hashSync(password, 12);
         const user = {
             id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
             email, name, password: hash,
             currency: 'USD', budget: 0, theme: 'system',
-            premium: false, premiumUntil: null, stripeCustomerId: null
+            premium: false, premiumUntil: null, stripeCustomerId: null,
+            createdAt: new Date().toISOString()
         };
         db.users.push(user);
         saveDB(db);
@@ -124,13 +199,20 @@ app.post('/api/auth/login', authLimiter, (req, res) => {
             return res.status(400).json({ error: 'Email and password are required' });
         }
 
+        const cleanEmail = sanitize(email);
+        if (checkLockout(cleanEmail)) {
+            return res.status(423).json({ error: 'Account temporarily locked due to too many failed attempts. Try again in 15 minutes.' });
+        }
+
         const db = loadDB();
-        const user = db.users.find(u => u.email === email);
+        const user = db.users.find(u => u.email === cleanEmail);
         if (!user || !bcrypt.compareSync(password, user.password)) {
+            recordFailedAttempt(cleanEmail);
             return res.status(401).json({ error: 'Invalid email or password' });
         }
 
-        // Check if premium expired
+        clearAttempts(cleanEmail);
+
         if (user.premium && user.premiumUntil && new Date(user.premiumUntil) < new Date()) {
             user.premium = false;
             user.premiumUntil = null;
@@ -168,9 +250,12 @@ app.put('/api/auth/settings', authMiddleware, (req, res) => {
         const user = db.users.find(u => u.id === req.userId);
         if (!user) return res.status(404).json({ error: 'User not found' });
         const { currency, budget, theme } = req.body;
-        if (currency !== undefined) user.currency = currency;
-        if (budget !== undefined) user.budget = budget;
-        if (theme !== undefined) user.theme = theme;
+        if (currency !== undefined && typeof currency === 'string' && currency.length <= 5) user.currency = sanitize(currency);
+        if (budget !== undefined && typeof budget === 'number' && budget >= 0 && budget <= 10000000) user.budget = budget;
+        if (theme !== undefined && typeof theme === 'string') {
+            const allowed = ['light','dark','system','ocean','sunset','neon','rose','forest'];
+            if (allowed.includes(theme)) user.theme = theme;
+        }
         saveDB(db);
         res.json({ ok: true });
     } catch (err) {
