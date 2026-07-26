@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PennyLens - Expense Tracker</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none'%3E%3Ccircle cx='20' cy='20' r='16' stroke='%236366f1' stroke-width='4'/%3E%3Cline x1='32' y1='32' x2='44' y2='44' stroke='%236366f1' stroke-width='4' stroke-linecap='round'/%3E%3Ccircle cx='20' cy='20' r='10' fill='%236366f1' opacity='0.15'/%3E%3Ccircle cx='20' cy='20' r='10' stroke='%236366f1' stroke-width='2'/%3E%3Ctext x='20' y='25' text-anchor='middle' font-size='14' font-weight='700' fill='%236366f1' font-family='sans-serif'%3EP%3C/text%3E%3C/svg%3E">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -13,9 +14,18 @@
     <div id="landingPage" class="landing">
         <nav class="landing-nav">
             <div class="landing-logo">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="12" y1="1" x2="12" y2="23"></line>
-                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                <svg width="32" height="32" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="20" cy="20" r="16" stroke="url(#logoGrad)" stroke-width="3.5" fill="none"/>
+                    <line x1="32" y1="32" x2="44" y2="44" stroke="url(#logoGrad)" stroke-width="3.5" stroke-linecap="round"/>
+                    <circle cx="20" cy="20" r="10" fill="url(#logoGrad)" opacity="0.15"/>
+                    <circle cx="20" cy="20" r="10" stroke="url(#logoGrad)" stroke-width="2" fill="none"/>
+                    <text x="20" y="25" text-anchor="middle" font-size="14" font-weight="700" fill="url(#logoGrad)" font-family="Inter, sans-serif">P</text>
+                    <defs>
+                        <linearGradient id="logoGrad" x1="0" y1="0" x2="48" y2="48">
+                            <stop offset="0%" stop-color="#6366f1"/>
+                            <stop offset="100%" stop-color="#ec4899"/>
+                        </linearGradient>
+                    </defs>
                 </svg>
                 <span>PennyLens</span>
             </div>
@@ -170,9 +180,12 @@
         <footer class="landing-footer">
             <div class="footer-content">
                 <div class="footer-brand">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="12" y1="1" x2="12" y2="23"></line>
-                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    <svg width="24" height="24" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="20" cy="20" r="16" stroke="currentColor" stroke-width="3.5" fill="none" opacity="0.6"/>
+                        <line x1="32" y1="32" x2="44" y2="44" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" opacity="0.6"/>
+                        <circle cx="20" cy="20" r="10" fill="currentColor" opacity="0.1"/>
+                        <circle cx="20" cy="20" r="10" stroke="currentColor" stroke-width="2" fill="none" opacity="0.6"/>
+                        <text x="20" y="25" text-anchor="middle" font-size="14" font-weight="700" fill="currentColor" font-family="Inter, sans-serif">P</text>
                     </svg>
                     <span>PennyLens</span>
                 </div>
@@ -196,9 +209,18 @@
     <div id="authScreen" class="auth-screen" style="display:none;">
         <div class="auth-container">
             <div class="auth-logo">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="12" y1="1" x2="12" y2="23"></line>
-                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                <svg width="56" height="56" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="20" cy="20" r="16" stroke="url(#authLogoGrad)" stroke-width="3" fill="none"/>
+                    <line x1="32" y1="32" x2="44" y2="44" stroke="url(#authLogoGrad)" stroke-width="3" stroke-linecap="round"/>
+                    <circle cx="20" cy="20" r="10" fill="url(#authLogoGrad)" opacity="0.12"/>
+                    <circle cx="20" cy="20" r="10" stroke="url(#authLogoGrad)" stroke-width="1.5" fill="none"/>
+                    <text x="20" y="25" text-anchor="middle" font-size="14" font-weight="700" fill="url(#authLogoGrad)" font-family="Inter, sans-serif">P</text>
+                    <defs>
+                        <linearGradient id="authLogoGrad" x1="0" y1="0" x2="48" y2="48">
+                            <stop offset="0%" stop-color="#6366f1"/>
+                            <stop offset="100%" stop-color="#ec4899"/>
+                        </linearGradient>
+                    </defs>
                 </svg>
                 <h1>PennyLens</h1>
                 <p>Track your spending, anywhere.</p>
@@ -256,9 +278,18 @@
     <div id="appMain" class="app" style="display:none;">
         <nav class="navbar">
             <div class="logo">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="12" y1="1" x2="12" y2="23"></line>
-                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                <svg width="30" height="30" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="20" cy="20" r="16" stroke="url(#navLogoGrad)" stroke-width="3.5" fill="none"/>
+                    <line x1="32" y1="32" x2="44" y2="44" stroke="url(#navLogoGrad)" stroke-width="3.5" stroke-linecap="round"/>
+                    <circle cx="20" cy="20" r="10" fill="url(#navLogoGrad)" opacity="0.15"/>
+                    <circle cx="20" cy="20" r="10" stroke="url(#navLogoGrad)" stroke-width="2" fill="none"/>
+                    <text x="20" y="25" text-anchor="middle" font-size="14" font-weight="700" fill="url(#navLogoGrad)" font-family="Inter, sans-serif">P</text>
+                    <defs>
+                        <linearGradient id="navLogoGrad" x1="0" y1="0" x2="48" y2="48">
+                            <stop offset="0%" stop-color="#6366f1"/>
+                            <stop offset="100%" stop-color="#ec4899"/>
+                        </linearGradient>
+                    </defs>
                 </svg>
                 <span>PennyLens</span>
             </div>
