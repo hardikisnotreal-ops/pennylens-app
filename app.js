@@ -61,90 +61,84 @@ async function api(endpoint, options = {}) {
     return data;
 }
 
-// Custom Select Logic
+// Custom Select — body-appended dropdowns (never clipped by overflow)
+let activeSelect = null;
+
 function initCustomSelects() {
     document.querySelectorAll('.custom-select').forEach(select => {
         const trigger = select.querySelector('.custom-select-trigger');
-        const options = select.querySelector('.custom-select-options');
-
         trigger.addEventListener('click', (e) => {
             e.stopPropagation();
-            const wasOpen = select.classList.contains('open');
-            closeAllSelects();
-            if (!wasOpen) {
-                positionDropdown(select);
-                select.classList.add('open');
+            if (activeSelect === select) {
+                closeAllSelects();
+            } else {
+                closeAllSelects();
+                openSelect(select);
             }
-        });
-    });
-
-    document.querySelectorAll('.custom-option').forEach(opt => {
-        opt.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const select = opt.closest('.custom-select');
-            if (!select) return;
-            const value = opt.dataset.value;
-            select.dataset.value = value;
-            select.querySelectorAll('.custom-option').forEach(o => o.classList.remove('active'));
-            opt.classList.add('active');
-            select.querySelector('.custom-select-trigger span').textContent = opt.textContent;
-            select.classList.remove('open');
-            select.dispatchEvent(new CustomEvent('change', { detail: { value } }));
         });
     });
 }
 
-function positionDropdown(select) {
+function openSelect(select) {
     const trigger = select.querySelector('.custom-select-trigger');
-    const options = select.querySelector('.custom-select-options');
+    const optionsPanel = select.querySelector('.custom-select-options');
     const rect = trigger.getBoundingClientRect();
 
-    // Temporarily make visible to measure real height
-    options.style.transition = 'none';
-    options.style.visibility = 'hidden';
-    options.style.opacity = '0';
-    options.style.pointerEvents = 'none';
-    options.style.top = '0';
-    options.style.left = '0';
-    options.style.minWidth = rect.width + 'px';
-    options.style.maxWidth = Math.max(rect.width, 200) + 'px';
-    options.style.maxHeight = '320px';
-    options.style.display = 'block';
-    options.offsetHeight; // force reflow
+    // Clone options into a body-level container
+    const dropdown = document.createElement('div');
+    dropdown.className = 'cs-dropdown';
+    dropdown.innerHTML = optionsPanel.innerHTML;
+    dropdown.style.position = 'fixed';
+    dropdown.style.top = (rect.bottom + 4) + 'px';
+    dropdown.style.left = rect.left + 'px';
+    dropdown.style.minWidth = rect.width + 'px';
+    dropdown.style.maxHeight = '280px';
+    dropdown.style.overflowY = 'auto';
+    dropdown.style.zIndex = '9999';
+    document.body.appendChild(dropdown);
 
-    const optRect = options.getBoundingClientRect();
-    const dropdownHeight = optRect.height || 280;
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const spaceAbove = rect.top;
-
-    let top;
-    if (spaceBelow >= dropdownHeight + 8 || spaceBelow >= spaceAbove) {
-        top = rect.bottom + 6;
-    } else {
-        top = rect.top - dropdownHeight - 6;
+    // Flip up if not enough space below
+    const ddRect = dropdown.getBoundingClientRect();
+    if (ddRect.bottom > window.innerHeight - 8) {
+        dropdown.style.top = (rect.top - ddRect.height - 4) + 'px';
+    }
+    if (rect.left + ddRect.width > window.innerWidth - 8) {
+        dropdown.style.left = (window.innerWidth - ddRect.width - 8) + 'px';
     }
 
-    // Set final position (transitions still disabled)
-    options.style.top = Math.max(4, top) + 'px';
-    options.style.left = rect.left + 'px';
+    // Mark active option
+    const val = select.dataset.value;
+    dropdown.querySelectorAll('.cs-option').forEach(o => {
+        if (o.dataset.value === val) o.classList.add('active');
+    });
 
-    // Clear the temporary overrides, let CSS handle visibility
-    options.style.visibility = '';
-    options.style.opacity = '';
-    options.style.pointerEvents = '';
-    options.style.display = '';
-    options.style.maxHeight = '';
+    // Bind clicks on body dropdown
+    dropdown.querySelectorAll('.cs-option').forEach(opt => {
+        opt.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const value = opt.dataset.value;
+            select.dataset.value = value;
+            trigger.querySelector('span').textContent = opt.textContent;
+            closeAllSelects();
+            select.dispatchEvent(new CustomEvent('change', { detail: { value } }));
+        });
+    });
 
-    // Force reflow then re-enable transitions
-    options.offsetHeight;
-    options.style.transition = '';
+    select.classList.add('open');
+    activeSelect = select;
+
+    // Animate in
+    requestAnimationFrame(() => dropdown.classList.add('open'));
 }
 
 function closeAllSelects() {
     document.querySelectorAll('.custom-select.open').forEach(s => s.classList.remove('open'));
+    document.querySelectorAll('.cs-dropdown').forEach(d => d.remove());
+    activeSelect = null;
 }
 
 document.addEventListener('click', closeAllSelects);
+document.addEventListener('scroll', closeAllSelects, true);
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeAllSelects();
 });
@@ -158,7 +152,7 @@ function setCustomSelectValue(id, value) {
     const el = document.getElementById(id);
     if (!el) return;
     el.dataset.value = value;
-    el.querySelectorAll('.custom-option').forEach(opt => {
+    el.querySelectorAll('.cs-option').forEach(opt => {
         opt.classList.toggle('active', opt.dataset.value === value);
         if (opt.dataset.value === value) {
             el.querySelector('.custom-select-trigger span').textContent = opt.textContent;
@@ -174,27 +168,25 @@ function populateCustomMonthFilter() {
     if (!select) return;
     const current = select.dataset.value;
     const optionsContainer = select.querySelector('.custom-select-options');
-    optionsContainer.innerHTML = '<div class="custom-option active" data-value="all">All Time</div>';
+    optionsContainer.innerHTML = '<div class="cs-option" data-value="all">All Time</div>';
 
     [...months].sort().reverse().forEach(m => {
         const [y, mo] = m.split('-');
         const label = new Date(y, mo - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
         const div = document.createElement('div');
-        div.className = 'custom-option';
+        div.className = 'cs-option';
         div.dataset.value = m;
         div.textContent = label;
         optionsContainer.appendChild(div);
     });
 
     // Restore selection
-    const matchOpt = optionsContainer.querySelector(`[data-value="${current}"]`);
+    const matchOpt = optionsContainer.querySelector('[data-value="' + current + '"]');
     if (matchOpt) {
-        optionsContainer.querySelectorAll('.custom-option').forEach(o => o.classList.remove('active'));
         matchOpt.classList.add('active');
         select.querySelector('.custom-select-trigger span').textContent = matchOpt.textContent;
         select.dataset.value = current;
     } else {
-        optionsContainer.querySelectorAll('.custom-option').forEach(o => o.classList.remove('active'));
         optionsContainer.querySelector('[data-value="all"]').classList.add('active');
         select.querySelector('.custom-select-trigger span').textContent = 'All Time';
         select.dataset.value = 'all';
