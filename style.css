@@ -1439,7 +1439,8 @@ input::placeholder {
     -webkit-backdrop-filter: blur(20px);
     opacity: 0;
     transform: translateY(-6px) scale(0.97);
-    transition: opacity 0.2s ease, transform 0.2s ease;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    pointer-events: none;
 }
 
 [data-theme="dark"] .cs-dropdown {
@@ -1449,25 +1450,31 @@ input::placeholder {
 .cs-dropdown.open {
     opacity: 1;
     transform: translateY(0) scale(1);
+    pointer-events: auto;
 }
 
 .cs-dropdown::-webkit-scrollbar {
-    width: 4px;
+    width: 5px;
+}
+
+.cs-dropdown::-webkit-scrollbar-track {
+    background: transparent;
 }
 
 .cs-dropdown::-webkit-scrollbar-thumb {
     background: rgba(0,0,0,0.12);
-    border-radius: 2px;
+    border-radius: 3px;
 }
 
 .cs-option {
-    padding: 0.65rem 0.9rem;
+    padding: 0.6rem 0.9rem;
     cursor: pointer;
     font-size: 0.85rem;
     color: var(--text-secondary);
-    transition: all 0.15s ease;
+    transition: background 0.12s ease, color 0.12s ease, padding-left 0.12s ease;
     position: relative;
     white-space: nowrap;
+    user-select: none;
 }
 
 .cs-option:first-child {
@@ -1481,7 +1488,7 @@ input::placeholder {
 .cs-option:hover {
     background: var(--primary-light);
     color: var(--primary);
-    padding-left: 1.15rem;
+    padding-left: 1.1rem;
 }
 
 .cs-option.active {

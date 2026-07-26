@@ -84,20 +84,38 @@ function openSelect(select) {
     const optionsPanel = select.querySelector('.custom-select-options');
     const rect = trigger.getBoundingClientRect();
 
-    // Clone options into a body-level container
-    const dropdown = document.createElement('div');
+    // Create a fixed-position dropdown on the body
+    let dropdown = document.createElement('div');
     dropdown.className = 'cs-dropdown';
-    dropdown.innerHTML = optionsPanel.innerHTML;
-    dropdown.style.position = 'fixed';
-    dropdown.style.top = (rect.bottom + 4) + 'px';
-    dropdown.style.left = rect.left + 'px';
-    dropdown.style.minWidth = rect.width + 'px';
-    dropdown.style.maxHeight = '280px';
-    dropdown.style.overflowY = 'auto';
-    dropdown.style.zIndex = '9999';
+    dropdown.style.cssText = `position:fixed;top:${rect.bottom + 4}px;left:${rect.left}px;min-width:${rect.width}px;max-height:280px;overflow-y:auto;z-index:9999;`;
+
+    // Copy options
+    optionsPanel.querySelectorAll('.cs-option').forEach(opt => {
+        const clone = opt.cloneNode(true);
+        clone.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const value = clone.dataset.value;
+            select.dataset.value = value;
+            trigger.querySelector('span').textContent = clone.textContent;
+            // Update original options active state
+            optionsPanel.querySelectorAll('.cs-option').forEach(o => o.classList.remove('active'));
+            const orig = optionsPanel.querySelector(`.cs-option[data-value="${value}"]`);
+            if (orig) orig.classList.add('active');
+            closeAllSelects();
+            select.dispatchEvent(new CustomEvent('change', { detail: { value } }));
+        });
+        dropdown.appendChild(clone);
+    });
+
+    // Mark active
+    const val = select.dataset.value;
+    dropdown.querySelectorAll('.cs-option').forEach(o => {
+        if (o.dataset.value === val) o.classList.add('active');
+    });
+
     document.body.appendChild(dropdown);
 
-    // Flip up if not enough space below
+    // Flip up if needed
     const ddRect = dropdown.getBoundingClientRect();
     if (ddRect.bottom > window.innerHeight - 8) {
         dropdown.style.top = (rect.top - ddRect.height - 4) + 'px';
@@ -105,29 +123,13 @@ function openSelect(select) {
     if (rect.left + ddRect.width > window.innerWidth - 8) {
         dropdown.style.left = (window.innerWidth - ddRect.width - 8) + 'px';
     }
-
-    // Mark active option
-    const val = select.dataset.value;
-    dropdown.querySelectorAll('.cs-option').forEach(o => {
-        if (o.dataset.value === val) o.classList.add('active');
-    });
-
-    // Bind clicks on body dropdown
-    dropdown.querySelectorAll('.cs-option').forEach(opt => {
-        opt.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const value = opt.dataset.value;
-            select.dataset.value = value;
-            trigger.querySelector('span').textContent = opt.textContent;
-            closeAllSelects();
-            select.dispatchEvent(new CustomEvent('change', { detail: { value } }));
-        });
-    });
+    if (rect.left < 8) {
+        dropdown.style.left = '8px';
+    }
 
     select.classList.add('open');
     activeSelect = select;
 
-    // Animate in
     requestAnimationFrame(() => dropdown.classList.add('open'));
 }
 
@@ -137,8 +139,11 @@ function closeAllSelects() {
     activeSelect = null;
 }
 
-document.addEventListener('click', closeAllSelects);
-document.addEventListener('scroll', closeAllSelects, true);
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.custom-select') && !e.target.closest('.cs-dropdown')) {
+        closeAllSelects();
+    }
+});
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeAllSelects();
 });
