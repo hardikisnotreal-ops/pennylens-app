@@ -735,7 +735,28 @@ document.addEventListener('keydown', (e) => {
         closeModal();
         closeSettings();
     }
+    // Keyboard shortcuts (only when app is visible and not typing)
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if ($('#appMain').style.display === 'none') return;
+    if (e.key === 'n' || e.key === 'N') { e.preventDefault(); openModal(); }
+    if (e.key === 's' || e.key === 'S') { e.preventDefault(); openSettings(); }
+    if (e.key === '/' || e.key === '?') { e.preventDefault(); $('#searchInput').focus(); }
+    if (e.key === 'e' || e.key === 'E') { e.preventDefault(); exportCSV(); }
+    if (e.key === 't' || e.key === 'T') { e.preventDefault(); toggleTheme(); }
 });
+
+function toggleTheme() {
+    const themes = ['light', 'dark', 'ocean', 'sunset', 'neon', 'rose', 'forest'];
+    const current = getStoredTheme();
+    const idx = themes.indexOf(current);
+    const next = themes[(idx + 1) % themes.length];
+    setTheme(next);
+}
+
+// PWA Service Worker
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
 
 // Screen management
 function showScreen(screen) {

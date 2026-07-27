@@ -2772,6 +2772,76 @@ input::placeholder {
     .landing-nav-actions .btn-secondary { display: none; }
 }
 
+/* Social Proof */
+.social-proof {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 1.5rem;
+    justify-content: center;
+}
+
+.hero .social-proof {
+    justify-content: flex-start;
+}
+
+.avatar-stack {
+    display: flex;
+}
+
+.avatar-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: white;
+    border: 2px solid var(--bg);
+    margin-left: -8px;
+}
+
+.avatar-dot:first-child {
+    margin-left: 0;
+}
+
+.social-proof-text {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.social-proof-text strong {
+    color: var(--text);
+}
+
+/* Keyboard Shortcuts Hint */
+.kbd-hint {
+    position: fixed;
+    bottom: 24px;
+    left: 24px;
+    display: flex;
+    gap: 0.4rem;
+    z-index: 100;
+    opacity: 0.5;
+    transition: opacity 0.3s;
+}
+
+.kbd-hint:hover {
+    opacity: 1;
+}
+
+.kbd {
+    padding: 0.2rem 0.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-family: monospace;
+}
+
 /* Dark theme overrides for chatbot */
 [data-theme="dark"] .chatbot-window {
     background: var(--surface-solid);
