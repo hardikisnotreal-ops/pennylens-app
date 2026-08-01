@@ -374,12 +374,26 @@
             <div class="top-section">
                 <section class="summary-cards">
                     <div class="card card-balance">
-                        <p class="card-label">Total Spent</p>
+                        <div class="balance-top">
+                            <p class="card-label">Total Spent</p>
+                            <span class="balance-chip" id="monthChip">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg>
+                                This Month
+                            </span>
+                        </div>
                         <h2 id="totalSpent" class="card-value">$0.00</h2>
-                        <p id="expenseCount" class="card-sub">0 expenses</p>
+                        <div class="balance-footer">
+                            <p id="expenseCount" class="card-sub">0 expenses</p>
+                            <div class="balance-cats" id="balanceCats"></div>
+                        </div>
                     </div>
                     <div class="card card-budget">
-                        <p class="card-label">Monthly Budget</p>
+                        <div class="balance-top">
+                            <p class="card-label">Monthly Budget</p>
+                            <span class="card-icon-badge" id="budgetIcon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            </span>
+                        </div>
                         <h2 id="budgetRemaining" class="card-value">$0.00</h2>
                         <div class="budget-bar-wrapper">
                             <div id="budgetBar" class="budget-bar"></div>
@@ -387,7 +401,12 @@
                         <p id="budgetText" class="card-sub">Set a budget to track</p>
                     </div>
                     <div class="card card-top">
-                        <p class="card-label">Top Category</p>
+                        <div class="balance-top">
+                            <p class="card-label">Top Category</p>
+                            <span class="card-icon-badge" id="topCatIcon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M7 12l3-3 4 4 5-6"></path></svg>
+                            </span>
+                        </div>
                         <h2 id="topCategory" class="card-value">-</h2>
                         <p id="topCategoryAmount" class="card-sub">No data</p>
                     </div>
@@ -395,14 +414,24 @@
 
                 <div class="two-col">
                     <section class="panel chart-panel">
-                        <h3>Spending by Category</h3>
+                        <div class="panel-header">
+                            <h3>Spending by Category</h3>
+                            <span class="panel-month" id="chartMonthLabel"></span>
+                        </div>
                         <div class="chart-container">
                             <canvas id="categoryChart"></canvas>
+                            <div class="chart-center" id="chartCenter">
+                                <span class="chart-center-label">Total</span>
+                                <span class="chart-center-value" id="chartCenterValue">$0</span>
+                            </div>
                         </div>
                     </section>
 
                     <section class="panel">
-                        <h3>Daily Spending</h3>
+                        <div class="panel-header">
+                            <h3>Daily Spending</h3>
+                            <span class="panel-month" id="dailyMonthLabel"></span>
+                        </div>
                         <div class="chart-container chart-container-small">
                             <canvas id="dailyChart"></canvas>
                         </div>
@@ -419,7 +448,7 @@
                                 <circle cx="11" cy="11" r="8"></circle>
                                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                             </svg>
-                            <input type="text" id="searchInput" placeholder="Search expenses...">
+                            <input type="text" id="searchInput" placeholder="Search expenses..." autocomplete="off">
                         </div>
                         <div class="custom-select" id="filterCategorySelect" data-value="all">
                             <div class="custom-select-trigger">
@@ -788,7 +817,7 @@
             <button class="chat-suggestion" data-q="investing basics">Investing basics</button>
         </div>
         <div class="chatbot-input-area">
-            <input type="text" id="chatbotInput" placeholder="Ask about money management...">
+            <input type="text" id="chatbotInput" placeholder="Ask about money management..." autocomplete="off">
             <button id="chatbotSend" class="btn btn-primary btn-sm">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
             </button>

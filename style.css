@@ -766,6 +766,98 @@ body::after {
     color: var(--text-muted);
 }
 
+/* Monarch-style hero balance card */
+.balance-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.balance-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 0.25rem 0.6rem;
+    border-radius: 50px;
+    white-space: nowrap;
+}
+
+.card-icon-badge {
+    width: 34px;
+    height: 34px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-light);
+    color: var(--primary);
+    flex-shrink: 0;
+}
+
+.card-balance {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 60%, rgba(139, 92, 246, 0.85) 100%);
+    border: none;
+    color: #fff;
+    box-shadow: 0 12px 40px -8px var(--primary-light), inset 0 1px 0 rgba(255,255,255,0.25);
+}
+
+.card-balance::before {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+}
+
+.card-balance .card-label {
+    color: rgba(255,255,255,0.85);
+}
+
+.card-balance .card-value {
+    font-size: 2.6rem;
+    font-weight: 800;
+    color: #fff;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+
+.card-balance .card-sub {
+    color: rgba(255,255,255,0.75);
+}
+
+.card-balance .balance-chip {
+    color: #fff;
+    background: rgba(255,255,255,0.18);
+    border-color: rgba(255,255,255,0.35);
+}
+
+.balance-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.balance-cats {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.balance-cat-dot {
+    width: 22px;
+    height: 22px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
 .card-budget .card-value {
     color: var(--primary);
 }
@@ -846,6 +938,29 @@ body::after {
     margin-bottom: 1rem;
 }
 
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.panel-header h3 {
+    margin-bottom: 0;
+}
+
+.panel-month {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.2rem 0.6rem;
+    border-radius: 50px;
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
 /* Chart */
 .chart-container {
     position: relative;
@@ -856,6 +971,34 @@ body::after {
 
 .chart-container-small {
     max-height: 180px;
+}
+
+/* Monarch-style center total inside doughnut */
+.chart-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -55%);
+    text-align: center;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.chart-center-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.chart-center-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.02em;
 }
 
 /* Input Row */
@@ -998,12 +1141,12 @@ input::placeholder {
 .expense-row {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    padding: 0.85rem 0;
+    gap: 0.9rem;
+    padding: 0.8rem 0.75rem;
     border-bottom: 1px solid var(--border);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     animation: slideInRight 0.4s ease-out both;
-    border-radius: var(--radius-sm);
+    border-radius: 14px;
 }
 
 .expense-row:nth-child(1) { animation-delay: 0.05s; }
@@ -1021,11 +1164,8 @@ input::placeholder {
 
 .expense-row:hover {
     background: rgba(255,255,255,0.2);
-    margin: 0 -1.5rem;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-    transform: translateX(4px);
-    box-shadow: -4px 0 0 var(--primary);
+    transform: translateX(2px);
+    box-shadow: var(--shadow-sm);
 }
 
 [data-theme="dark"] .expense-row:hover {
@@ -1035,17 +1175,18 @@ input::placeholder {
 .expense-icon {
     width: 40px;
     height: 40px;
-    border-radius: 12px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.1rem;
     flex-shrink: 0;
     transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
 .expense-row:hover .expense-icon {
-    transform: scale(1.15) rotate(-5deg);
+    transform: scale(1.12) rotate(-5deg);
 }
 
 .expense-info {

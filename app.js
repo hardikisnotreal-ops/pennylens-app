@@ -314,12 +314,27 @@ function updateSummary() {
     $('#totalSpent').textContent = formatCurrency(total);
     $('#expenseCount').textContent = `${current.length} expense${current.length !== 1 ? 's' : ''} this month`;
 
+    // Top category mini-dots (Monarch-style) on the balance card
+    const catTotals = {};
+    current.forEach(e => {
+        catTotals[e.category] = (catTotals[e.category] || 0) + e.amount;
+    });
+    const sortedCats = Object.entries(catTotals).sort((a, b) => b[1] - a[1]);
+    const balanceCats = $('#balanceCats');
+    if (sortedCats.length > 0) {
+        balanceCats.innerHTML = sortedCats.slice(0, 3).map(([cat]) =>
+            `<span class="balance-cat-dot" style="background:${CATEGORIES[cat].color}" title="${CATEGORIES[cat].label}">${CATEGORIES[cat].icon}</span>`
+        ).join('');
+    } else {
+        balanceCats.innerHTML = '';
+    }
+
     if (budget > 0) {
         const remaining = budget - total;
         const pct = Math.min((total / budget) * 100, 100);
         $('#budgetRemaining').textContent = formatCurrency(Math.max(remaining, 0));
         $('#budgetBar').style.width = pct + '%';
-        $('#currentBudgetLabel').textContent = `Current budget: ${formatCurrency(budget)}`;
+        $('#budgetText').textContent = `Current budget: ${formatCurrency(budget)}`;
 
         $('#budgetBar').className = 'budget-bar';
         if (pct >= 90) $('#budgetBar').classList.add('danger');
@@ -329,23 +344,43 @@ function updateSummary() {
     } else {
         $('#budgetRemaining').textContent = formatCurrency(0);
         $('#budgetBar').style.width = '0%';
-        $('#currentBudgetLabel').textContent = 'Set a budget to track';
         $('#budgetRemaining').style.color = '';
     }
 
-    const catTotals = {};
-    current.forEach(e => {
-        catTotals[e.category] = (catTotals[e.category] || 0) + e.amount;
-    });
-
-    const topCat = Object.entries(catTotals).sort((a, b) => b[1] - a[1])[0];
+    const topCat = sortedCats[0];
     if (topCat) {
         $('#topCategory').textContent = CATEGORIES[topCat[0]].icon + ' ' + CATEGORIES[topCat[0]].label;
         $('#topCategoryAmount').textContent = formatCurrency(topCat[1]) + ' spent';
+        $('#topCatIcon').innerHTML = CATEGORIES[topCat[0]].icon;
+        $('#topCatIcon').style.background = CATEGORIES[topCat[0]].color;
+        $('#topCatIcon').style.color = '#fff';
     } else {
         $('#topCategory').textContent = '-';
         $('#topCategoryAmount').textContent = 'No data';
+        $('#topCatIcon').innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M7 12l3-3 4 4 5-6"></path></svg>';
+        $('#topCatIcon').style.background = '';
+        $('#topCatIcon').style.color = '';
     }
+
+    updateChartCenter(total);
+    updateMonthLabels();
+}
+
+function updateChartCenter(total) {
+    $('#chartCenterValue').textContent = formatCurrency(total);
+    if (total > 0) {
+        $('#chartCenter').style.display = 'flex';
+    } else {
+        $('#chartCenter').style.display = 'none';
+    }
+}
+
+function updateMonthLabels() {
+    const now = new Date();
+    const monthName = now.toLocaleString('en-US', { month: 'long' });
+    $('#chartMonthLabel').textContent = monthName;
+    $('#dailyMonthLabel').textContent = monthName;
+    $('#monthChip').innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg> ${monthName}`;
 }
 
 function renderExpenses() {
@@ -430,16 +465,27 @@ function updateCategoryChart() {
         type: 'doughnut',
         data: {
             labels,
-            datasets: [{ data, backgroundColor: colors, borderWidth: 0, hoverOffset: 6 }]
+            datasets: [{ data, backgroundColor: colors, borderWidth: 4, borderColor: isDark ? 'rgba(15,15,40,0.9)' : 'rgba(255,255,255,0.9)', hoverOffset: 8, hoverBorderColor: isDark ? 'rgba(15,15,40,1)' : '#fff' }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            cutout: '65%',
+            cutout: '72%',
             plugins: {
                 legend: {
                     position: 'bottom',
-                    labels: { color: textColor, padding: 12, font: { size: 11, family: 'Inter' }, usePointStyle: true, pointStyleWidth: 8 }
+                    labels: { color: textColor, padding: 14, font: { size: 11.5, family: 'Inter', weight: '500' }, usePointStyle: true, pointStyleWidth: 9, boxHeight: 8 }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(10,10,26,0.9)',
+                    padding: 12,
+                    cornerRadius: 10,
+                    displayColors: false,
+                    titleFont: { family: 'Inter', weight: '600' },
+                    bodyFont: { family: 'Inter' },
+                    callbacks: {
+                        label: (ctx) => '  ' + ctx.parsed.toLocaleString(undefined, { style: 'currency', currency: selectedCurrency })
+                    }
                 }
             }
         }
@@ -740,7 +786,7 @@ document.addEventListener('keydown', (e) => {
     if ($('#appMain').style.display === 'none') return;
     if (e.key === 'n' || e.key === 'N') { e.preventDefault(); openModal(); }
     if (e.key === 's' || e.key === 'S') { e.preventDefault(); openSettings(); }
-    if (e.key === '/' || e.key === '?') { e.preventDefault(); $('#searchInput').focus(); }
+    if (e.key === '/') { e.preventDefault(); $('#searchInput').focus(); }
     if (e.key === 'e' || e.key === 'E') { e.preventDefault(); exportCSV(); }
     if (e.key === 't' || e.key === 'T') { e.preventDefault(); toggleTheme(); }
 });
@@ -991,6 +1037,21 @@ updateSummary = function() {
     const prevVal = parseFloat(prevText.replace(/[^0-9.-]/g, '')) || 0;
     animateValue(totalEl, prevVal, total);
 
+    // Top category mini-dots (Monarch-style) on the balance card
+    const catTotals = {};
+    current.forEach(e => {
+        catTotals[e.category] = (catTotals[e.category] || 0) + e.amount;
+    });
+    const sortedCats = Object.entries(catTotals).sort((a, b) => b[1] - a[1]);
+    const balanceCats = $('#balanceCats');
+    if (sortedCats.length > 0) {
+        balanceCats.innerHTML = sortedCats.slice(0, 3).map(([cat]) =>
+            `<span class="balance-cat-dot" style="background:${CATEGORIES[cat].color}" title="${CATEGORIES[cat].label}">${CATEGORIES[cat].icon}</span>`
+        ).join('');
+    } else {
+        balanceCats.innerHTML = '';
+    }
+
     if (budget > 0) {
         const remaining = budget - total;
         const pct = Math.min((total / budget) * 100, 100);
@@ -998,6 +1059,7 @@ updateSummary = function() {
         const prevRem = parseFloat(remEl.textContent.replace(/[^0-9.-]/g, '')) || 0;
         animateValue(remEl, prevRem, Math.max(remaining, 0));
         $('#budgetBar').style.width = pct + '%';
+        $('#budgetText').textContent = `Current budget: ${formatCurrency(budget)}`;
 
         $('#budgetBar').className = 'budget-bar';
         if (pct >= 90) $('#budgetBar').classList.add('danger');
@@ -1007,22 +1069,27 @@ updateSummary = function() {
     } else {
         $('#budgetRemaining').textContent = formatCurrency(0);
         $('#budgetBar').style.width = '0%';
+        $('#budgetText').textContent = 'Set a budget to track';
         $('#budgetRemaining').style.color = '';
     }
 
-    const catTotals = {};
-    current.forEach(e => {
-        catTotals[e.category] = (catTotals[e.category] || 0) + e.amount;
-    });
-
-    const topCat = Object.entries(catTotals).sort((a, b) => b[1] - a[1])[0];
+    const topCat = sortedCats[0];
     if (topCat) {
         $('#topCategory').textContent = CATEGORIES[topCat[0]].icon + ' ' + CATEGORIES[topCat[0]].label;
         $('#topCategoryAmount').textContent = formatCurrency(topCat[1]) + ' spent';
+        $('#topCatIcon').innerHTML = CATEGORIES[topCat[0]].icon;
+        $('#topCatIcon').style.background = CATEGORIES[topCat[0]].color;
+        $('#topCatIcon').style.color = '#fff';
     } else {
         $('#topCategory').textContent = '-';
         $('#topCategoryAmount').textContent = 'No data';
+        $('#topCatIcon').innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M7 12l3-3 4 4 5-6"></path></svg>';
+        $('#topCatIcon').style.background = '';
+        $('#topCatIcon').style.color = '';
     }
+
+    updateChartCenter(total);
+    updateMonthLabels();
 };
 
 function updateModalLabels() {
