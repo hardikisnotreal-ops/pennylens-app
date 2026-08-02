@@ -5,11 +5,11 @@
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#ff9500",
+  "theme_color": "#ff692d",
   "orientation": "any",
   "icons": [
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%23ff9500'/%3E%3Ccircle cx='215' cy='215' r='150' stroke='white' stroke-width='14' fill='none' opacity='0.9'/%3E%3Cline x1='330' y1='330' x2='430' y2='430' stroke='white' stroke-width='14' stroke-linecap='round' opacity='0.9'/%3E%3Ccircle cx='215' cy='215' r='95' stroke='white' stroke-width='6' fill='white' fill-opacity='0.1' opacity='0.9'/%3E%3Ctext x='215' y='245' text-anchor='middle' font-size='120' font-weight='700' fill='white' font-family='sans-serif' opacity='0.95'%3EP%3C/text%3E%3C/svg%3E",
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%23ff692d'/%3E%3Ccircle cx='215' cy='215' r='150' stroke='white' stroke-width='14' fill='none' opacity='0.9'/%3E%3Cline x1='330' y1='330' x2='430' y2='430' stroke='white' stroke-width='14' stroke-linecap='round' opacity='0.9'/%3E%3Ccircle cx='215' cy='215' r='95' stroke='white' stroke-width='6' fill='white' fill-opacity='0.1' opacity='0.9'/%3E%3Ctext x='215' y='245' text-anchor='middle' font-size='120' font-weight='700' fill='white' font-family='sans-serif' opacity='0.95'%3EP%3C/text%3E%3C/svg%3E",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"

@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PennyLens — Dashboard Preview</title>
+    <link rel="stylesheet" href="style.css?v=9">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        html, body { background: var(--bg); }
+        body { padding: 0; }
+        .preview-body { max-width: 1200px; margin: 0 auto; padding: 1.5rem 1.5rem 4rem; }
+        .chart-placeholder-doughnut, .chart-placeholder-bars { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+        .doughnut-wrap { position: relative; width: 190px; height: 190px; }
+        .doughnut { width: 100%; height: 100%; border-radius: 50%;
+            background: conic-gradient(#ff692d 0deg 118deg, #f59e0b 118deg 180deg, #6366f1 180deg 252deg, #10b981 252deg 317deg, #ef4444 317deg 360deg); }
+        .doughnut-hole { position: absolute; inset: 26px; border-radius: 50%; background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .doughnut-hole .lbl { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; }
+        .doughnut-hole .val { font-family: var(--font-display); font-size: 1.35rem; font-weight: 600; letter-spacing: -0.02em; }
+        .bar-chart { display: flex; align-items: flex-end; gap: 10px; height: 170px; padding: 0.5rem 0.25rem 0; }
+        .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
+        .bar { width: 100%; max-width: 34px; border-radius: 8px 8px 3px 3px; background: var(--primary-light); position: relative; transition: background .2s; }
+        .bar.hot { background: var(--primary); }
+        .bar-label { font-size: 0.68rem; color: var(--text-muted); font-weight: 600; }
+        .legend { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; margin-top: 0.9rem; }
+        .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-secondary); font-weight: 600; }
+        .legend-swatch { width: 10px; height: 10px; border-radius: 3px; }
+        .preview-tag { position: fixed; top: 12px; right: 16px; z-index: 60; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #fff; background: var(--primary); padding: 0.3rem 0.8rem; border-radius: var(--radius-pill); }
+        .expense-icon svg { width: 18px; height: 18px; }
+        .cat-dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+        .mobile-fab { display: none; }
+        @media (max-width: 760px) {
+            .preview-tag { display: none; }
+            .mobile-fab { display: flex; }
+            .chart-panel { margin-top: 1rem; }
+        }
+        .navbar { position: relative; }
+    </style>
+</head>
+<body>
+    <span class="preview-tag">Preview</span>
+
+    <nav class="navbar">
+        <div class="logo">
+            <svg width="30" height="30" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="20" cy="20" r="16" stroke="url(#g)" stroke-width="3.5" fill="none"/>
+                <line x1="32" y1="32" x2="44" y2="44" stroke="url(#g)" stroke-width="3.5" stroke-linecap="round"/>
+                <circle cx="20" cy="20" r="10" fill="url(#g)" opacity="0.15"/>
+                <circle cx="20" cy="20" r="10" stroke="url(#g)" stroke-width="2" fill="none"/>
+                <text x="20" y="25" text-anchor="middle" font-size="14" font-weight="700" fill="url(#g)" font-family="Inter, sans-serif">P</text>
+                <defs>
+                    <linearGradient id="g" x1="0" y1="0" x2="48" y2="48">
+                        <stop offset="0%" stop-color="#ff692d"/>
+                        <stop offset="100%" stop-color="#ff4d1a"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+            <span>PennyLens</span>
+        </div>
+        <div class="nav-actions">
+            <div class="user-badge">
+                <div class="user-avatar">A</div>
+                <span class="user-name-text">Alex</span>
+            </div>
+            <button class="btn-icon" title="Settings">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            </button>
+            <button class="btn-icon" title="Sign out">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            </button>
+        </div>
+    </nav>
+
+    <div class="preview-body">
+        <div class="page-header">
+            <div>
+                <h1>Dashboard</h1>
+                <p class="page-header-sub">Sunday, August 2, 2026</p>
+            </div>
+            <div class="page-header-actions">
+                <button class="btn btn-secondary" title="Export CSV">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Export
+                </button>
+            </div>
+        </div>
+
+        <div class="top-section">
+            <section class="summary-cards">
+                <div class="card card-balance">
+                    <div class="balance-top">
+                        <p class="card-label">Total Spent</p>
+                        <span class="balance-chip">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg>
+                            This Month
+                        </span>
+                    </div>
+                    <h2 class="card-value">$1,284.50</h2>
+                    <div class="balance-footer">
+                        <p class="card-sub">23 expenses</p>
+                        <div class="balance-cats">
+                            <span class="cat-dot" style="background:#ff692d"></span>
+                            <span class="cat-dot" style="background:#f59e0b"></span>
+                            <span class="cat-dot" style="background:#6366f1"></span>
+                            <span class="cat-dot" style="background:#10b981"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card card-budget">
+                    <div class="balance-top">
+                        <p class="card-label">Monthly Budget</p>
+                        <span class="card-icon-badge">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        </span>
+                    </div>
+                    <h2 class="card-value">$715.50</h2>
+                    <div class="budget-bar-wrapper">
+                        <div id="budgetBar" class="budget-bar" style="width:64%"></div>
+                    </div>
+                    <p class="card-sub">$715.50 left of $2,000</p>
+                </div>
+                <div class="card card-top">
+                    <div class="balance-top">
+                        <p class="card-label">Top Category</p>
+                        <span class="card-icon-badge">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M7 12l3-3 4 4 5-6"></path></svg>
+                        </span>
+                    </div>
+                    <h2 class="card-value">Food &amp; Dining</h2>
+                    <p class="card-sub">$420.10 this month</p>
+                </div>
+            </section>
+
+            <div class="two-col">
+                <section class="panel chart-panel">
+                    <div class="panel-header">
+                        <h3>Spending by Category</h3>
+                        <span class="panel-month">August 2026</span>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-placeholder-doughnut">
+                            <div class="doughnut-wrap">
+                                <div class="doughnut"></div>
+                                <div class="doughnut-hole">
+                                    <span class="lbl">Total</span>
+                                    <span class="val">$1,284</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="legend">
+                            <span class="legend-item"><span class="legend-swatch" style="background:#ff692d"></span>Food 33%</span>
+                            <span class="legend-item"><span class="legend-swatch" style="background:#f59e0b"></span>Transport 17%</span>
+                            <span class="legend-item"><span class="legend-swatch" style="background:#6366f1"></span>Shopping 20%</span>
+                            <span class="legend-item"><span class="legend-swatch" style="background:#10b981"></span>Bills 18%</span>
+                            <span class="legend-item"><span class="legend-swatch" style="background:#ef4444"></span>Other 12%</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-header">
+                        <h3>Daily Spending</h3>
+                        <span class="panel-month">Last 7 days</span>
+                    </div>
+                    <div class="chart-container chart-container-small">
+                        <div class="chart-placeholder-bars">
+                            <div class="bar-chart">
+                                <div class="bar-col"><div class="bar" style="height:28%"></div><span class="bar-label">Mon</span></div>
+                                <div class="bar-col"><div class="bar" style="height:46%"></div><span class="bar-label">Tue</span></div>
+                                <div class="bar-col"><div class="bar" style="height:35%"></div><span class="bar-label">Wed</span></div>
+                                <div class="bar-col"><div class="bar" style="height:64%"></div><span class="bar-label">Thu</span></div>
+                                <div class="bar-col"><div class="bar" style="height:52%"></div><span class="bar-label">Fri</span></div>
+                                <div class="bar-col"><div class="bar" style="height:80%"></div><span class="bar-label">Sat</span></div>
+                                <div class="bar-col"><div class="bar hot" style="height:38%"></div><span class="bar-label">Sun</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <section class="panel expenses-section">
+                <div class="expenses-header">
+                    <h3>Expenses</h3>
+                    <div class="expenses-actions">
+                        <div class="search-box">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            <input type="text" placeholder="Search expenses..." autocomplete="off">
+                        </div>
+                        <div class="custom-select" data-value="all">
+                            <div class="custom-select-trigger">
+                                <span>All Categories</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </div>
+                        </div>
+                        <div class="custom-select" data-value="all">
+                            <div class="custom-select-trigger">
+                                <span>All Time</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            Add Expense
+                        </button>
+                    </div>
+                </div>
+                <div class="expenses-list">
+                    <div class="date-group">
+                        <div class="date-group-header">Today</div>
+                        <div class="expense-row no-anim">
+                            <div class="expense-icon cat-food">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 12H3m8 0 3-6"></path><path d="M11 12 8 18"></path><path d="M21 12c0 2.2-2 4-4 4s-4-1.8-4-4 2-4 4-4 4 1.8 4 4z"></path></svg>
+                            </div>
+                            <div class="expense-info">
+                                <div class="name">Food &amp; Dining</div>
+                                <div class="meta">Whole Foods — groceries</div>
+                            </div>
+                            <div class="expense-amount">-$86.20</div>
+                            <div class="expense-actions">
+                                <button class="btn-sm edit" title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                                <button class="btn-sm delete" title="Delete"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                            </div>
+                        </div>
+                        <div class="expense-row no-anim">
+                            <div class="expense-icon cat-transport">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3 6 20"></path><path d="M21 3H11"></path><path d="M21 3v10"></path></svg>
+                            </div>
+                            <div class="expense-info">
+                                <div class="name">Transport</div>
+                                <div class="meta">Uber — airport drop</div>
+                            </div>
+                            <div class="expense-amount">-$18.75</div>
+                            <div class="expense-actions">
+                                <button class="btn-sm edit" title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                                <button class="btn-sm delete" title="Delete"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                            </div>
+                        </div>
+                        <div class="expense-row no-anim">
+                            <div class="expense-icon cat-other">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            </div>
+                            <div class="expense-info">
+                                <div class="name">Other</div>
+                                <div class="meta">Birthday gift</div>
+                            </div>
+                            <div class="expense-amount">-$45.00</div>
+                            <div class="expense-actions">
+                                <button class="btn-sm edit" title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                                <button class="btn-sm delete" title="Delete"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="date-group">
+                        <div class="date-group-header">Yesterday</div>
+                        <div class="expense-row no-anim">
+                            <div class="expense-icon cat-bills">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                            </div>
+                            <div class="expense-info">
+                                <div class="name">Bills &amp; Utilities</div>
+                                <div class="meta">Electricity — August bill</div>
+                            </div>
+                            <div class="expense-amount">-$72.40</div>
+                            <div class="expense-actions">
+                                <button class="btn-sm edit" title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                                <button class="btn-sm delete" title="Delete"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                            </div>
+                        </div>
+                        <div class="expense-row no-anim">
+                            <div class="expense-icon cat-entertainment">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="8" y1="10" x2="16" y2="10"></line></svg>
+                            </div>
+                            <div class="expense-info">
+                                <div class="name">Entertainment</div>
+                                <div class="meta">Streaming subscription</div>
+                            </div>
+                            <div class="expense-amount">-$15.99</div>
+                            <div class="expense-actions">
+                                <button class="btn-sm edit" title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                                <button class="btn-sm delete" title="Delete"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                            </div>
+                        </div>
+                        <div class="expense-row no-anim">
+                            <div class="expense-icon cat-shopping">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                            </div>
+                            <div class="expense-info">
+                                <div class="name">Shopping</div>
+                                <div class="meta">Amazon — home supplies</div>
+                            </div>
+                            <div class="expense-amount">-$48.30</div>
+                            <div class="expense-actions">
+                                <button class="btn-sm edit" title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                                <button class="btn-sm delete" title="Delete"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <button id="addExpenseMobileBtn" class="add-expense-mobile mobile-fab btn btn-primary" title="Add Expense">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+    </button>
+</body>
+</html>
