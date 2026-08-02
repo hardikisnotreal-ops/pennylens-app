@@ -646,6 +646,15 @@ function applyTheme(theme) {
 }
 
 function initTheme() {
+    // One-time migration: the old default was 'system' (follows OS dark mode).
+    // The new default is the orange/white light theme.
+    if (!localStorage.getItem('spendwise_theme_migrated')) {
+        const stored = localStorage.getItem(THEME_KEY);
+        if (stored === 'system' || stored === 'dark') {
+            localStorage.setItem(THEME_KEY, 'light');
+        }
+        localStorage.setItem('spendwise_theme_migrated', '1');
+    }
     applyTheme(getActiveTheme());
     updateThemeButtons();
 }
@@ -884,7 +893,7 @@ async function handleLogin(email, password) {
         budget = currentUser.budget || 0;
         localStorage.setItem(CURRENCY_KEY, selectedCurrency);
         localStorage.setItem(BUDGET_KEY, budget.toString());
-        if (currentUser.theme) {
+        if (currentUser.theme && currentUser.theme !== 'system') {
             localStorage.setItem(THEME_KEY, currentUser.theme);
         }
         showApp();
@@ -1171,7 +1180,7 @@ async function init() {
             currentUser = data.user;
             selectedCurrency = currentUser.currency || 'USD';
             budget = currentUser.budget || 0;
-            if (currentUser.theme) localStorage.setItem(THEME_KEY, currentUser.theme);
+            if (currentUser.theme && currentUser.theme !== 'system') localStorage.setItem(THEME_KEY, currentUser.theme);
             showApp();
             updateUserInfo();
             updatePremiumUI();
