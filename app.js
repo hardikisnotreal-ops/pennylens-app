@@ -272,6 +272,29 @@ function formatCurrency(amount) {
     }
 }
 
+function animateNumber(el, value, suffix) {
+    suffix = suffix || '';
+    const current = parseFloat(el.dataset.value || '0');
+    if (current === value) {
+        el.textContent = formatCurrency(value) + suffix;
+        el.dataset.value = value;
+        return;
+    }
+    const start = performance.now();
+    const duration = 650;
+    function frame(now) {
+        const t = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - t, 3);
+        el.textContent = formatCurrency(current + (value - current) * eased) + suffix;
+        if (t < 1) requestAnimationFrame(frame);
+        else {
+            el.textContent = formatCurrency(value) + suffix;
+            el.dataset.value = value;
+        }
+    }
+    requestAnimationFrame(frame);
+}
+
 function getCurrencySymbol() {
     return CURRENCIES[selectedCurrency].symbol;
 }
@@ -311,7 +334,7 @@ function updateSummary() {
     const current = getCurrentMonthExpenses();
     const total = current.reduce((sum, e) => sum + e.amount, 0);
 
-    $('#totalSpent').textContent = formatCurrency(total);
+    animateNumber($('#totalSpent'), total);
     $('#expenseCount').textContent = `${current.length} expense${current.length !== 1 ? 's' : ''} this month`;
 
     // Top category mini-dots (Monarch-style) on the balance card
@@ -332,7 +355,7 @@ function updateSummary() {
     if (budget > 0) {
         const remaining = budget - total;
         const pct = Math.min((total / budget) * 100, 100);
-        $('#budgetRemaining').textContent = formatCurrency(Math.max(remaining, 0));
+        animateNumber($('#budgetRemaining'), Math.max(remaining, 0));
         $('#budgetBar').style.width = pct + '%';
         $('#budgetText').textContent = `Current budget: ${formatCurrency(budget)}`;
 
@@ -342,15 +365,16 @@ function updateSummary() {
 
         $('#budgetRemaining').style.color = remaining < 0 ? 'var(--danger)' : '';
     } else {
-        $('#budgetRemaining').textContent = formatCurrency(0);
+        animateNumber($('#budgetRemaining'), 0);
         $('#budgetBar').style.width = '0%';
+        $('#budgetText').textContent = 'Set a budget to track';
         $('#budgetRemaining').style.color = '';
     }
 
     const topCat = sortedCats[0];
     if (topCat) {
         $('#topCategory').textContent = CATEGORIES[topCat[0]].icon + ' ' + CATEGORIES[topCat[0]].label;
-        $('#topCategoryAmount').textContent = formatCurrency(topCat[1]) + ' spent';
+        animateNumber($('#topCategoryAmount'), topCat[1], ' spent');
         $('#topCatIcon').innerHTML = CATEGORIES[topCat[0]].icon;
         $('#topCatIcon').style.background = CATEGORIES[topCat[0]].color;
         $('#topCatIcon').style.color = '#fff';
@@ -410,11 +434,14 @@ function renderExpenses() {
         (groups[key] = groups[key] || []).push(e);
     });
 
+    const animate = !list.classList.contains('has-rendered');
+    list.classList.add('has-rendered');
+
     list.innerHTML = Object.entries(groups).map(([date, items]) => `
         <div class="date-group">
             <div class="date-group-header">${formatDateGroup(date)}</div>
             ${items.map(e => `
-                <div class="expense-row" data-id="${e.id}">
+                <div class="expense-row${animate ? '' : ' no-anim'}" data-id="${e.id}">
                     <div class="expense-icon cat-${e.category}">${CATEGORIES[e.category].icon}</div>
                     <div class="expense-info">
                         <div class="name">${CATEGORIES[e.category].label}</div>
@@ -629,6 +656,20 @@ function deleteExpense(id) {
     expenses = expenses.filter(x => x.id !== id);
     save();
     refreshAll();
+    showToast('Expense deleted');
+}
+
+let toastTimer = null;
+function showToast(message) {
+    const container = $('#toastContainer');
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.classList.add('out');
+        setTimeout(() => toast.remove(), 400);
+    }, 2200);
 }
 
 function exportCSV() {
@@ -649,6 +690,7 @@ function exportCSV() {
     a.download = `spendwise_export_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+    showToast('CSV exported');
 }
 
 // Theme
@@ -692,6 +734,7 @@ function setTheme(mode) {
     if (authToken) {
         api('/api/auth/settings', { method: 'PUT', body: JSON.stringify({ theme: mode }) }).catch(() => {});
     }
+    showToast('Theme updated');
 }
 
 function updateThemeButtons() {
@@ -754,7 +797,9 @@ $('#expenseForm').addEventListener('submit', (e) => {
 
     save();
     refreshAll();
+    const wasEditing = !!editingId;
     closeModal();
+    showToast(wasEditing ? 'Expense updated' : 'Expense added');
 });
 
 $('#searchInput').addEventListener('input', renderExpenses);
@@ -794,6 +839,7 @@ $('#settingsSetBudgetBtn').addEventListener('click', () => {
         saveBudget();
         refreshAll();
         updateBudgetHint();
+        showToast('Budget saved');
     }
 });
 
@@ -811,6 +857,7 @@ $('#settingsClearBtn').addEventListener('click', () => {
     updateBudgetHint();
     $('#settingsBudgetInput').value = '';
     syncExpenses();
+    showToast('All data cleared');
 });
 
 document.addEventListener('keydown', (e) => {
@@ -1032,22 +1079,6 @@ $('#upgradeModal').addEventListener('click', (e) => {
 });
 
 // Micro-interactions
-function animateValue(el, start, end, duration = 600) {
-    const startTime = performance.now();
-    const isNeg = end < 0;
-    const absEnd = Math.abs(end);
-
-    function update(currentTime) {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const eased = 1 - Math.pow(1 - progress, 3);
-        const current = start + (absEnd - start) * eased;
-        el.textContent = formatCurrency(isNeg ? -current : current);
-        if (progress < 1) requestAnimationFrame(update);
-    }
-    requestAnimationFrame(update);
-}
-
 function initRipple() {
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('.btn, .btn-icon');
@@ -1059,75 +1090,6 @@ function initRipple() {
 }
 
 initRipple();
-
-// Override updateSummary to use animated counter
-const _origUpdateSummary = updateSummary;
-updateSummary = function() {
-    const current = getCurrentMonthExpenses();
-    const total = current.reduce((sum, e) => sum + e.amount, 0);
-
-    const countEl = $('#expenseCount');
-    countEl.textContent = `${current.length} expense${current.length !== 1 ? 's' : ''} this month`;
-
-    const totalEl = $('#totalSpent');
-    const prevText = totalEl.textContent;
-    const prevVal = parseFloat(prevText.replace(/[^0-9.-]/g, '')) || 0;
-    animateValue(totalEl, prevVal, total);
-
-    // Top category mini-dots (Monarch-style) on the balance card
-    const catTotals = {};
-    current.forEach(e => {
-        catTotals[e.category] = (catTotals[e.category] || 0) + e.amount;
-    });
-    const sortedCats = Object.entries(catTotals).sort((a, b) => b[1] - a[1]);
-    const balanceCats = $('#balanceCats');
-    if (sortedCats.length > 0) {
-        balanceCats.innerHTML = sortedCats.slice(0, 3).map(([cat]) =>
-            `<span class="balance-cat-dot" style="background:${CATEGORIES[cat].color}" title="${CATEGORIES[cat].label}">${CATEGORIES[cat].icon}</span>`
-        ).join('');
-    } else {
-        balanceCats.innerHTML = '';
-    }
-
-    if (budget > 0) {
-        const remaining = budget - total;
-        const pct = Math.min((total / budget) * 100, 100);
-        const remEl = $('#budgetRemaining');
-        const prevRem = parseFloat(remEl.textContent.replace(/[^0-9.-]/g, '')) || 0;
-        animateValue(remEl, prevRem, Math.max(remaining, 0));
-        $('#budgetBar').style.width = pct + '%';
-        $('#budgetText').textContent = `Current budget: ${formatCurrency(budget)}`;
-
-        $('#budgetBar').className = 'budget-bar';
-        if (pct >= 90) $('#budgetBar').classList.add('danger');
-        else if (pct >= 70) $('#budgetBar').classList.add('warning');
-
-        remEl.style.color = remaining < 0 ? 'var(--danger)' : '';
-    } else {
-        $('#budgetRemaining').textContent = formatCurrency(0);
-        $('#budgetBar').style.width = '0%';
-        $('#budgetText').textContent = 'Set a budget to track';
-        $('#budgetRemaining').style.color = '';
-    }
-
-    const topCat = sortedCats[0];
-    if (topCat) {
-        $('#topCategory').textContent = CATEGORIES[topCat[0]].icon + ' ' + CATEGORIES[topCat[0]].label;
-        $('#topCategoryAmount').textContent = formatCurrency(topCat[1]) + ' spent';
-        $('#topCatIcon').innerHTML = CATEGORIES[topCat[0]].icon;
-        $('#topCatIcon').style.background = CATEGORIES[topCat[0]].color;
-        $('#topCatIcon').style.color = '#fff';
-    } else {
-        $('#topCategory').textContent = '-';
-        $('#topCategoryAmount').textContent = 'No data';
-        $('#topCatIcon').innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M7 12l3-3 4 4 5-6"></path></svg>';
-        $('#topCatIcon').style.background = '';
-        $('#topCatIcon').style.color = '';
-    }
-
-    updateChartCenter(total);
-    updateMonthLabels();
-};
 
 function updateModalLabels() {
     const sym = getCurrencySymbol();
