@@ -178,7 +178,7 @@ app.post('/api/auth/register', authLimiter, (req, res) => {
         const user = {
             id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
             email, name, password: hash,
-            currency: 'USD', budget: 0, theme: 'system',
+            currency: 'USD', budget: 0, theme: 'light',
             premium: false, premiumUntil: null, stripeCustomerId: null,
             createdAt: new Date().toISOString()
         };

@@ -631,7 +631,7 @@ function getSystemTheme() {
 }
 
 function getStoredTheme() {
-    return localStorage.getItem(THEME_KEY) || 'system';
+    return localStorage.getItem(THEME_KEY) || 'light';
 }
 
 function getActiveTheme() {
