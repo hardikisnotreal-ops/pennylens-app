@@ -474,15 +474,15 @@ function updateCategoryChart() {
             plugins: {
                 legend: {
                     position: 'bottom',
-                    labels: { color: textColor, padding: 14, font: { size: 11.5, family: 'Inter', weight: '500' }, usePointStyle: true, pointStyleWidth: 9, boxHeight: 8 }
+                    labels: { color: textColor, padding: 14, font: { size: 11.5, family: 'Outfit', weight: '500' }, usePointStyle: true, pointStyleWidth: 9, boxHeight: 8 }
                 },
                 tooltip: {
                     backgroundColor: 'rgba(10,10,26,0.9)',
                     padding: 12,
                     cornerRadius: 10,
                     displayColors: false,
-                    titleFont: { family: 'Inter', weight: '600' },
-                    bodyFont: { family: 'Inter' },
+                    titleFont: { family: 'Outfit', weight: '600' },
+                    bodyFont: { family: 'Outfit' },
                     callbacks: {
                         label: (ctx) => '  ' + ctx.parsed.toLocaleString(undefined, { style: 'currency', currency: selectedCurrency })
                     }
