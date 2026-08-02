@@ -1667,8 +1667,8 @@ input::placeholder {
 
 /* Upgrade Modal */
 .modal-upgrade {
-    max-width: 420px;
-    text-align: center;
+    max-width: 560px;
+    text-align: left;
 }
 
 .upgrade-body {
@@ -1749,6 +1749,281 @@ input::placeholder {
     font-size: 0.78rem;
     color: var(--text-muted);
     margin-top: 0.75rem;
+}
+
+/* Plan cards + currency picker (upgrade modal) */
+.pricing-currency-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.pricing-currency-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.pricing-currency-select {
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    border-radius: var(--radius-sm);
+    padding: 0.5rem 2rem 0.5rem 0.85rem;
+    font-size: 0.85rem;
+    font-family: inherit;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.7rem center;
+}
+
+.plan-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.9rem;
+}
+
+.plan-card {
+    position: relative;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.1rem;
+    background: var(--card);
+    display: flex;
+    flex-direction: column;
+    animation: slideInUp 0.4s ease-out both;
+}
+
+.plan-card:nth-child(2) { animation-delay: 0.1s; }
+
+.plan-featured {
+    border: 2px solid var(--primary);
+    box-shadow: 0 8px 24px rgba(255, 105, 45, 0.18);
+}
+
+.plan-ribbon {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #ff692d, #ff4d1a);
+    color: white;
+    font-size: 0.62rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.22rem 0.7rem;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.plan-name {
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.15rem;
+}
+
+.plan-tagline {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-bottom: 0.9rem;
+    min-height: 2.2em;
+}
+
+.plan-price {
+    display: flex;
+    align-items: baseline;
+    gap: 0.3rem;
+    margin-bottom: 1rem;
+}
+
+.plan-price .price-amount {
+    font-size: 2.1rem;
+}
+
+.plan-card .upgrade-features {
+    margin-bottom: 1rem;
+    flex: 1;
+}
+
+.plan-card .upgrade-features li {
+    padding: 0.32rem 0;
+    font-size: 0.82rem;
+}
+
+.plan-card .upgrade-features li::before {
+    width: 18px;
+    height: 18px;
+    font-size: 0.62rem;
+}
+
+@media (max-width: 560px) {
+    .plan-grid { grid-template-columns: 1fr; }
+    .plan-tagline { min-height: 0; }
+}
+
+/* Plan chip */
+.plan-chip {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.18rem 0.5rem;
+    border-radius: 999px;
+    background: rgba(255, 105, 45, 0.12);
+    color: var(--primary);
+    vertical-align: middle;
+}
+
+.plan-chip-pro {
+    background: rgba(139, 92, 246, 0.14);
+    color: #8b5cf6;
+}
+
+/* Feature lock */
+.feature-lock {
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.feature-lock svg { color: var(--primary); }
+
+/* Category budgets */
+.category-budget-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.category-budget-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.cb-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.cb-input {
+    width: 110px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    border-radius: var(--radius-sm);
+    padding: 0.45rem 0.6rem;
+    font-size: 0.85rem;
+    font-family: inherit;
+    text-align: right;
+}
+
+.cb-bar-wrap {
+    flex: 1;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--bg-secondary);
+    overflow: hidden;
+}
+
+.cb-bar {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--primary);
+    transition: width 0.5s ease;
+}
+
+.cb-amount {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    min-width: 110px;
+    text-align: right;
+}
+
+.cb-amount.over {
+    color: var(--danger);
+    font-weight: 600;
+}
+
+.cb-row-dash {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.35rem 0;
+}
+
+.cb-row-dash .cb-bar-wrap { max-width: 180px; }
+
+/* Smart insights */
+.insights-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.75rem;
+}
+
+.insight-card {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+    padding: 0.9rem 1rem;
+}
+
+.insight-card .ic-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 0.3rem;
+}
+
+.insight-card .ic-value {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+.insight-card .ic-sub {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.2rem;
+}
+
+.insight-tip {
+    margin-top: 0.9rem;
+    padding: 0.7rem 0.9rem;
+    border-radius: var(--radius-sm);
+    background: rgba(255, 105, 45, 0.08);
+    border: 1px solid rgba(255, 105, 45, 0.18);
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+}
+
+.insight-tip strong { color: var(--primary); }
+
+.premium-panel {
+    margin-bottom: 1.5rem;
 }
 
 /* Upgrade Banner */

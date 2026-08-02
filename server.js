@@ -12,7 +12,32 @@ const JWT_SECRET = process.env.JWT_SECRET || 'spendwise_secret_change_me';
 const STRIPE_SECRET = process.env.STRIPE_SECRET_KEY || '';
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
 const STRIPE_PRICE_ID = process.env.STRIPE_PRICE_ID || '';
+// Optional per-plan/per-currency Stripe prices, e.g.
+// STRIPE_PRICES={"USD":{"plus":"price_x","pro":"price_y"},"INR":{"plus":"price_z","pro":"price_w"}}
+let STRIPE_PRICES = {};
+try { STRIPE_PRICES = JSON.parse(process.env.STRIPE_PRICES || '{}'); } catch { STRIPE_PRICES = {}; }
 const DB_FILE = path.join(__dirname, 'spendwise_data.json');
+
+const PLANS = ['free', 'plus', 'pro'];
+
+// Localized display pricing (approx. equivalents of $5 / $10)
+const PRICING = {
+    USD: { plus: 5, pro: 10 }, EUR: { plus: 4.99, pro: 9.99 },
+    GBP: { plus: 4.49, pro: 8.99 }, INR: { plus: 499, pro: 999 },
+    JPY: { plus: 590, pro: 1180 }, CAD: { plus: 6.99, pro: 13.99 },
+    AUD: { plus: 7.99, pro: 15.99 }, CNY: { plus: 34.99, pro: 69.99 },
+    KRW: { plus: 6900, pro: 13800 }, BRL: { plus: 24.99, pro: 49.99 },
+    MXN: { plus: 99, pro: 199 }, NGN: { plus: 4500, pro: 9000 },
+    AED: { plus: 18.99, pro: 37.99 }, SAR: { plus: 19.99, pro: 39.99 },
+    ZAR: { plus: 89, pro: 179 }, SGD: { plus: 6.99, pro: 13.99 },
+    HKD: { plus: 39, pro: 78 }, SEK: { plus: 54, pro: 108 },
+    NOK: { plus: 54, pro: 108 }, CHF: { plus: 4.99, pro: 9.99 }
+};
+
+// Daily AI assistant message limits per plan
+const AI_LIMITS = { free: 5, plus: 30, pro: Infinity };
+
+const CATEGORIES_LIST = ['food', 'transport', 'shopping', 'bills', 'entertainment', 'health', 'education', 'other'];
 
 let stripe = null;
 if (STRIPE_SECRET) {
@@ -147,12 +172,43 @@ function authMiddleware(req, res, next) {
     }
 }
 
+function ensurePlan(user) {
+    // Migration: existing premium users without a plan become 'plus'
+    if (!user.plan) {
+        user.plan = user.premium ? 'plus' : 'free';
+    }
+    if (!PLANS.includes(user.plan)) user.plan = 'free';
+    user.premium = user.plan !== 'free';
+    return user;
+}
+
 function userResponse(user) {
+    ensurePlan(user);
     return {
         id: user.id, email: user.email, name: user.name,
         currency: user.currency, budget: user.budget, theme: user.theme,
-        premium: !!user.premium, premiumUntil: user.premiumUntil || null
+        plan: user.plan, premium: !!user.premium, premiumUntil: user.premiumUntil || null,
+        categoryBudgets: user.categoryBudgets || {},
+        aiQuota: getAiQuota(user)
     };
+}
+
+function todayKey() {
+    return new Date().toISOString().slice(0, 10);
+}
+
+function getAiUsage(user) {
+    const usage = user.aiUsage || {};
+    if (usage.date !== todayKey()) return { date: todayKey(), count: 0 };
+    return usage;
+}
+
+function getAiQuota(user) {
+    ensurePlan(user);
+    const limit = AI_LIMITS[user.plan] || AI_LIMITS.free;
+    if (limit === Infinity) return { limit: null, remaining: null };
+    const usage = getAiUsage(user);
+    return { limit, remaining: Math.max(0, limit - usage.count) };
 }
 
 // Auth Routes
@@ -179,7 +235,8 @@ app.post('/api/auth/register', authLimiter, (req, res) => {
             id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
             email, name, password: hash,
             currency: 'USD', budget: 0, theme: 'light',
-            premium: false, premiumUntil: null, stripeCustomerId: null,
+            plan: 'free', premium: false, premiumUntil: null, stripeCustomerId: null,
+            categoryBudgets: {}, aiUsage: { date: todayKey(), count: 0 },
             createdAt: new Date().toISOString()
         };
         db.users.push(user);
@@ -215,6 +272,7 @@ app.post('/api/auth/login', authLimiter, (req, res) => {
 
         if (user.premium && user.premiumUntil && new Date(user.premiumUntil) < new Date()) {
             user.premium = false;
+            user.plan = 'free';
             user.premiumUntil = null;
             saveDB(db);
         }
@@ -234,6 +292,7 @@ app.get('/api/auth/me', authMiddleware, (req, res) => {
 
         if (user.premium && user.premiumUntil && new Date(user.premiumUntil) < new Date()) {
             user.premium = false;
+            user.plan = 'free';
             user.premiumUntil = null;
             saveDB(db);
         }
@@ -249,12 +308,25 @@ app.put('/api/auth/settings', authMiddleware, (req, res) => {
         const db = loadDB();
         const user = db.users.find(u => u.id === req.userId);
         if (!user) return res.status(404).json({ error: 'User not found' });
-        const { currency, budget, theme } = req.body;
+        const { currency, budget, theme, categoryBudgets } = req.body;
         if (currency !== undefined && typeof currency === 'string' && currency.length <= 5) user.currency = sanitize(currency);
         if (budget !== undefined && typeof budget === 'number' && budget >= 0 && budget <= 10000000) user.budget = budget;
         if (theme !== undefined && typeof theme === 'string') {
             const allowed = ['light','dark','system','ocean','sunset','neon','rose','forest'];
             if (allowed.includes(theme)) user.theme = theme;
+        }
+        if (categoryBudgets !== undefined && categoryBudgets !== null) {
+            ensurePlan(user);
+            if (user.plan === 'free') {
+                return res.status(403).json({ error: 'Category budgets are a Plus feature. Upgrade to set per-category limits.', upgradeRequired: true });
+            }
+            const clean = {};
+            for (const [cat, val] of Object.entries(categoryBudgets)) {
+                if (CATEGORIES_LIST.includes(cat) && typeof val === 'number' && val >= 0 && val <= 100000000) {
+                    clean[cat] = val;
+                }
+            }
+            user.categoryBudgets = clean;
         }
         saveDB(db);
         res.json({ ok: true });
@@ -312,14 +384,67 @@ app.post('/api/expenses/sync', authMiddleware, (req, res) => {
     }
 });
 
+// Pricing + AI quota endpoints
+app.get('/api/pricing', (req, res) => {
+    res.json({ prices: PRICING });
+});
+
+app.post('/api/ai/usage', apiLimiter, authMiddleware, (req, res) => {
+    try {
+        const db = loadDB();
+        const user = db.users.find(u => u.id === req.userId);
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        ensurePlan(user);
+        const limit = AI_LIMITS[user.plan];
+        if (limit === Infinity) {
+            saveDB(db);
+            return res.json({ ok: true, limit: null, remaining: null });
+        }
+
+        const usage = getAiUsage(user);
+        if (usage.count >= limit) {
+            return res.json({
+                ok: false, limit, remaining: 0,
+                upgradeRequired: user.plan === 'free'
+            });
+        }
+
+        usage.count += 1;
+        user.aiUsage = usage;
+        saveDB(db);
+        res.json({ ok: true, limit, remaining: Math.max(0, limit - usage.count) });
+    } catch (err) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 // Stripe Routes
 app.post('/api/checkout', apiLimiter, authMiddleware, async (req, res) => {
     try {
         if (!stripe) {
             return res.status(500).json({ error: 'Payments not configured. Add STRIPE_SECRET_KEY.' });
         }
-        if (!STRIPE_PRICE_ID) {
-            return res.status(500).json({ error: 'Price not configured. Add STRIPE_PRICE_ID.' });
+
+        const { plan, currency } = req.body || {};
+        const planName = PLANS.includes(plan) ? plan : 'plus';
+        const currencyCode = PRICING[currency] ? currency : 'USD';
+
+        // Resolve Stripe price ID for the chosen plan + currency
+        let priceId = STRIPE_PRICES[currencyCode] && STRIPE_PRICES[currencyCode][planName];
+        if (!priceId && currencyCode !== 'USD') {
+            priceId = STRIPE_PRICES.USD && STRIPE_PRICES.USD[planName];
+        }
+        if (!priceId) {
+            if (planName === 'plus' && STRIPE_PRICE_ID) priceId = STRIPE_PRICE_ID;
+            else if (planName === 'pro') {
+                // fall back to the single legacy price id (assumes that price = Pro in old setups is wrong;
+                // safer to ask the operator to configure STRIPE_PRICES)
+                if (STRIPE_PRICE_ID && !STRIPE_PRICES.USD) priceId = STRIPE_PRICE_ID;
+            }
+        }
+        if (!priceId) {
+            return res.status(500).json({ error: `Price not configured for ${planName} (${currencyCode}). Add STRIPE_PRICES or STRIPE_PRICE_ID.` });
         }
 
         const db = loadDB();
@@ -330,10 +455,11 @@ app.post('/api/checkout', apiLimiter, authMiddleware, async (req, res) => {
             mode: 'subscription',
             payment_method_types: ['card'],
             customer_email: user.email,
-            line_items: [{ price: STRIPE_PRICE_ID, quantity: 1 }],
+            line_items: [{ price: priceId, quantity: 1 }],
             success_url: `${req.headers.origin || 'http://localhost:3000'}?upgraded=true`,
             cancel_url: `${req.headers.origin || 'http://localhost:3000'}`,
-            metadata: { userId: user.id }
+            metadata: { userId: user.id, plan: planName },
+            subscription_data: { metadata: { plan: planName } }
         });
 
         res.json({ url: session.url });
@@ -363,6 +489,8 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
         const userId = session.metadata.userId;
         const user = db.users.find(u => u.id === userId);
         if (user) {
+            const plan = PLANS.includes(session.metadata.plan) ? session.metadata.plan : 'plus';
+            user.plan = plan;
             user.premium = true;
             user.stripeCustomerId = session.customer;
             // 30 days from now (monthly subscription)
@@ -376,6 +504,7 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
         const user = db.users.find(u => u.stripeCustomerId === sub.customer);
         if (user) {
             user.premium = false;
+            user.plan = 'free';
             user.premiumUntil = null;
             saveDB(db);
         }
@@ -385,6 +514,16 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
         const invoice = event.data.object;
         const user = db.users.find(u => u.stripeCustomerId === invoice.customer);
         if (user) {
+            let plan = user.plan === 'pro' ? 'pro' : 'plus';
+            try {
+                if (invoice.subscription && stripe) {
+                    const sub = await stripe.subscriptions.retrieve(invoice.subscription);
+                    if (sub && sub.metadata && PLANS.includes(sub.metadata.plan)) {
+                        plan = sub.metadata.plan;
+                    }
+                }
+            } catch (e) { /* keep existing plan */ }
+            user.plan = plan;
             user.premium = true;
             user.premiumUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
             saveDB(db);

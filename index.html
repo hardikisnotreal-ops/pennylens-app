@@ -19,7 +19,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="PennyLens - Smart Expense Tracker">
     <meta name="twitter:description" content="Track every dollar, set budgets, and build better financial habits.">
-    <link rel="stylesheet" href="style.css?v=9">
+    <link rel="stylesheet" href="style.css?v=10">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -518,6 +518,28 @@
                         </div>
                     </section>
                 </div>
+
+                <section id="categoryBudgetPanel" class="panel premium-panel" style="display:none">
+                    <div class="panel-header">
+                        <h3>Category Budgets</h3>
+                        <span class="panel-month">This Month</span>
+                    </div>
+                    <div id="categoryBudgetListDash" class="category-budget-list"></div>
+                    <p id="categoryBudgetDashEmpty" class="hint">Set per-category budgets in Settings to see progress here.</p>
+                </section>
+
+                <section id="insightsPanel" class="panel premium-panel" style="display:none">
+                    <div class="panel-header">
+                        <h3>Smart Insights</h3>
+                        <span class="plan-chip plan-chip-pro">Pro</span>
+                    </div>
+                    <div id="insightsGrid" class="insights-grid"></div>
+                    <div id="insightsLock" class="feature-lock" style="display:none">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                        <p>Smart Insights are a <strong>Pro</strong> feature — projections, patterns and personalized tips.</p>
+                        <button class="btn btn-primary" onclick="openUpgradeModal()">Upgrade to Pro</button>
+                    </div>
+                </section>
             </div>
 
             <section class="panel expenses-section">
@@ -782,6 +804,24 @@
                     <p id="settingsBudgetHint" class="hint">No budget set</p>
                 </div>
 
+                <!-- Category Budgets (Plus) -->
+                <div id="categoryBudgetSection" class="settings-section">
+                    <h4 class="settings-section-title">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="7" width="20" height="14" rx="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                        </svg>
+                        Category Budgets <span class="plan-chip">Plus</span>
+                    </h4>
+                    <div id="categoryBudgetList" class="category-budget-list"></div>
+                    <button id="saveCategoryBudgetsBtn" class="btn btn-primary btn-full" style="display:none">Save Category Budgets</button>
+                    <div id="categoryBudgetLock" class="feature-lock" style="display:none">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                        <p>Category budgets are a <strong>Plus</strong> feature — set a spending limit for each category and get warned before you overspend.</p>
+                        <button class="btn btn-primary" onclick="openUpgradeModal()">Upgrade to Plus</button>
+                    </div>
+                    <p id="categoryBudgetHint" class="hint"></p>
+                </div>
+
                 <!-- Subscription -->
                 <div id="premiumSection" class="settings-section">
                     <h4 class="settings-section-title">
@@ -795,7 +835,7 @@
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                         </svg>
-                        Upgrade to Premium
+                        Upgrade to Plus or Pro
                     </button>
                 </div>
 
@@ -835,7 +875,7 @@
     <div id="upgradeModal" class="modal-overlay">
         <div class="modal modal-upgrade">
             <div class="modal-header">
-                <h3>Upgrade to Premium</h3>
+                <h3>Upgrade PennyLens</h3>
                 <button id="closeUpgrade" class="btn-icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -844,21 +884,51 @@
                 </button>
             </div>
             <div class="upgrade-body">
-                <div class="upgrade-price">
-                    <span class="price-amount">$5</span>
-                    <span class="price-period">/month</span>
+                <div class="pricing-currency-row">
+                    <label for="pricingCurrencySelect" class="pricing-currency-label">Billing currency</label>
+                    <select id="pricingCurrencySelect" class="pricing-currency-select"></select>
                 </div>
-                <ul class="upgrade-features">
-                    <li>Unlimited expenses</li>
-                    <li>Full spending history</li>
-                    <li>CSV data export</li>
-                    <li>Priority support</li>
-                </ul>
-                <button id="checkoutBtn" class="btn btn-primary btn-full" onclick="startCheckout()">
-                    Subscribe Now
-                </button>
+                <div class="plan-grid">
+                    <div class="plan-card">
+                        <div class="plan-name">Plus</div>
+                        <div class="plan-tagline">Core premium for serious trackers</div>
+                        <div class="plan-price">
+                            <span class="price-amount" id="plusPrice">$5</span>
+                            <span class="price-period">/month</span>
+                        </div>
+                        <ul class="upgrade-features">
+                            <li>Unlimited expenses &amp; full history</li>
+                            <li>CSV data export</li>
+                            <li>Category budgets (set limits per category)</li>
+                            <li>AI assistant — 30 messages/day</li>
+                            <li>Priority support</li>
+                        </ul>
+                        <button id="checkoutPlusBtn" class="btn btn-primary btn-full" onclick="startCheckout('plus')">
+                            Subscribe to Plus
+                        </button>
+                    </div>
+                    <div class="plan-card plan-featured">
+                        <span class="plan-ribbon">Most Popular</span>
+                        <div class="plan-name">Pro</div>
+                        <div class="plan-tagline">Everything in Plus, supercharged</div>
+                        <div class="plan-price">
+                            <span class="price-amount" id="proPrice">$10</span>
+                            <span class="price-period">/month</span>
+                        </div>
+                        <ul class="upgrade-features">
+                            <li>Everything in Plus</li>
+                            <li>Unlimited AI assistant</li>
+                            <li>Advanced insights &amp; trends</li>
+                            <li>All premium themes</li>
+                            <li>Priority support &amp; early features</li>
+                        </ul>
+                        <button id="checkoutProBtn" class="btn btn-primary btn-full" onclick="startCheckout('pro')">
+                            Subscribe to Pro
+                        </button>
+                    </div>
+                </div>
                 <p id="checkoutError" class="checkout-error"></p>
-                <p class="upgrade-note">Payments securely processed by Stripe.</p>
+                <p class="upgrade-note">Payments securely processed by Stripe. Localized pricing shown in your selected currency.</p>
             </div>
         </div>
     </div>
@@ -914,6 +984,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=9"></script>
+    <script src="app.js?v=10"></script>
 </body>
 </html>

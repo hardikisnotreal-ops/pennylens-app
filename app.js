@@ -47,6 +47,10 @@ let authToken = localStorage.getItem('spendwise_token') || null;
 let currentUser = null;
 let syncTimeout = null;
 let isPremium = false;
+let plan = 'free';
+let categoryBudgets = {};
+let PRICES = null;
+let checkoutCurrency = 'USD';
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
@@ -618,6 +622,8 @@ function refreshAll() {
     updateCategoryChart();
     updateDailyChart();
     populateCustomMonthFilter();
+    if (isPremium) renderCategoryBudgets();
+    if (plan === 'pro') renderInsights();
 }
 
 function openModal(editMode = false) {
@@ -673,6 +679,11 @@ function showToast(message) {
 }
 
 function exportCSV() {
+    if (!isPremium) {
+        showToast('CSV export is a Plus feature');
+        openUpgradeModal();
+        return;
+    }
     if (expenses.length === 0) {
         alert('No expenses to export.');
         return;
@@ -755,6 +766,7 @@ function openSettings() {
     setCustomSelectValue('settingsCurrencySelect', selectedCurrency);
     $('#settingsBudgetInput').value = budget > 0 ? budget : '';
     updateBudgetHint();
+    updatePlanUI();
 }
 
 function closeSettings() {
@@ -763,6 +775,89 @@ function closeSettings() {
 
 function updateBudgetHint() {
     $('#settingsBudgetHint').textContent = budget > 0 ? `Current budget: ${formatCurrency(budget)}` : 'No budget set';
+}
+
+// Category budgets (Plus)
+function renderCategoryBudgetsSettings() {
+    const list = $('#categoryBudgetList');
+    if (!list) return;
+    list.innerHTML = Object.entries(CATEGORIES).map(([cat, info]) =>
+        `<div class="category-budget-row">
+            <span class="cb-label">${info.icon} ${info.label}</span>
+            <input type="number" class="cb-input" data-cat="${cat}" value="${categoryBudgets[cat] || ''}" placeholder="0.00" min="0" step="0.01">
+        </div>`
+    ).join('');
+    updateCategoryBudgetHint();
+}
+
+function collectCategoryBudgets() {
+    const result = {};
+    document.querySelectorAll('#categoryBudgetList .cb-input').forEach(input => {
+        const val = parseFloat(input.value);
+        if (!isNaN(val) && val >= 0 && input.dataset.cat) result[input.dataset.cat] = val;
+    });
+    return result;
+}
+
+function updateCategoryBudgetHint() {
+    const hint = $('#categoryBudgetHint');
+    if (!hint) return;
+    const set = Object.values(categoryBudgets).filter(v => v > 0).length;
+    hint.textContent = isPremium ? (set > 0 ? `${set} category limit${set !== 1 ? 's' : ''} set` : 'Set a spending limit per category') : 'Available on Plus';
+}
+
+function renderCategoryBudgets() {
+    const list = $('#categoryBudgetListDash');
+    if (!list) return;
+    const current = getCurrentMonthExpenses();
+    const totals = {};
+    current.forEach(e => totals[e.category] = (totals[e.category] || 0) + e.amount);
+    const rows = Object.entries(categoryBudgets).filter(([, v]) => v > 0);
+    const empty = $('#categoryBudgetDashEmpty');
+    if (empty) empty.style.display = rows.length > 0 ? 'none' : '';
+    list.innerHTML = rows.map(([cat, limit]) => {
+        const spent = totals[cat] || 0;
+        const pct = Math.min((spent / limit) * 100, 100);
+        const over = spent > limit;
+        const info = CATEGORIES[cat];
+        return `<div class="cb-row-dash">
+            <span class="cb-label" title="${info.label}">${info.icon}</span>
+            <div class="cb-bar-wrap"><div class="cb-bar" style="width:${pct}%;${over ? 'background:var(--danger)' : ''}"></div></div>
+            <span class="cb-amount ${over ? 'over' : ''}">${formatCurrency(spent)} / ${formatCurrency(limit)}</span>
+        </div>`;
+    }).join('');
+}
+
+// Smart insights (Pro)
+function renderInsights() {
+    const grid = $('#insightsGrid');
+    if (!grid) return;
+    const current = getCurrentMonthExpenses();
+    const total = current.reduce((s, e) => s + e.amount, 0);
+    const now = new Date();
+    const daysElapsed = now.getDate();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const avgDaily = daysElapsed > 0 ? total / daysElapsed : 0;
+    const projected = avgDaily * daysInMonth;
+    const catTotals = {};
+    current.forEach(e => catTotals[e.category] = (catTotals[e.category] || 0) + e.amount);
+    const top = Object.entries(catTotals).sort((a, b) => b[1] - a[1])[0];
+    const pct = budget > 0 ? Math.round((total / budget) * 100) : null;
+
+    const tip = pct !== null && pct >= 90
+        ? `<strong>Heads up:</strong> you've used ${pct}% of your monthly budget already.`
+        : pct !== null && pct >= 70
+        ? `<strong>On track:</strong> you've used ${pct}% of your budget. Ease off to stay on plan.`
+        : top
+        ? `<strong>${CATEGORIES[top[0]].icon} ${CATEGORIES[top[0]].label}</strong> is your top category at ${Math.round((top[1] / (total || 1)) * 100)}% of spending.`
+        : `Add expenses to unlock personalized insights.`;
+
+    grid.innerHTML = `
+        <div class="insight-card"><div class="ic-label">Avg daily spend</div><div class="ic-value">${formatCurrency(avgDaily)}</div><div class="ic-sub">day ${daysElapsed} of ${daysInMonth}</div></div>
+        <div class="insight-card"><div class="ic-label">Projected month end</div><div class="ic-value">${formatCurrency(projected)}</div><div class="ic-sub">if current pace holds</div></div>
+        <div class="insight-card"><div class="ic-label">Top category</div><div class="ic-value">${top ? CATEGORIES[top[0]].icon + ' ' + CATEGORIES[top[0]].label : '—'}</div><div class="ic-sub">${top ? formatCurrency(top[1]) : 'no data yet'}</div></div>
+        <div class="insight-card"><div class="ic-label">Budget used</div><div class="ic-value">${pct !== null ? pct + '%' : '—'}</div><div class="ic-sub">${budget > 0 ? 'of monthly budget' : 'no budget set'}</div></div>
+        <div class="insight-tip">${tip}</div>`;
 }
 
 // Event Listeners
@@ -832,6 +927,11 @@ document.getElementById('settingsCurrencySelect').addEventListener('change', (e)
     }
 });
 
+$('#pricingCurrencySelect').addEventListener('change', (e) => {
+    checkoutCurrency = e.target.value;
+    updatePlanPrices();
+});
+
 $('#settingsSetBudgetBtn').addEventListener('click', () => {
     const val = parseFloat($('#settingsBudgetInput').value);
     if (val >= 0) {
@@ -845,6 +945,21 @@ $('#settingsSetBudgetBtn').addEventListener('click', () => {
 
 $('#settingsExportBtn').addEventListener('click', exportCSV);
 $('#exportBtn').addEventListener('click', exportCSV);
+
+$('#saveCategoryBudgetsBtn').addEventListener('click', () => {
+    if (!authToken) {
+        showToast('Category budgets need an account');
+        return;
+    }
+    categoryBudgets = collectCategoryBudgets();
+    api('/api/auth/settings', { method: 'PUT', body: JSON.stringify({ categoryBudgets }) })
+        .then(() => {
+            showToast('Category budgets saved');
+            renderCategoryBudgetsSettings();
+            refreshAll();
+        })
+        .catch(err => showToast(err.message));
+});
 
 $('#settingsClearBtn').addEventListener('click', () => {
     if (!confirm('This will delete ALL your expenses. This cannot be undone. Continue?')) return;
@@ -1013,6 +1128,9 @@ function logout() {
     authToken = null;
     currentUser = null;
     isLocalMode = false;
+    isPremium = false;
+    plan = 'free';
+    categoryBudgets = {};
     localStorage.removeItem('spendwise_token');
     expenses = [];
     budget = 0;
@@ -1102,25 +1220,97 @@ function updatePremiumUI() {
     const premiumBadge = document.querySelector('.premium-badge');
 
     if (!currentUser) return;
-    isPremium = !!currentUser.premium;
+    plan = currentUser.plan || (currentUser.premium ? 'plus' : 'free');
+    isPremium = plan !== 'free';
+    categoryBudgets = currentUser.categoryBudgets || {};
 
     if (isPremium) {
-        statusEl.innerHTML = `<p class="premium-active">Premium Active</p>`;
+        const until = currentUser.premiumUntil ? ` — renews ${new Date(currentUser.premiumUntil).toLocaleDateString()}` : '';
+        statusEl.innerHTML = `<p class="premium-active">${plan === 'pro' ? 'Pro' : 'Plus'} Active${until}</p>`;
         if (upgradeBtn) upgradeBtn.style.display = 'none';
         if (!premiumBadge) {
             const badge = document.createElement('span');
             badge.className = 'premium-badge';
-            badge.textContent = 'PRO';
+            badge.textContent = plan === 'pro' ? 'PRO' : 'PLUS';
             document.querySelector('.user-badge').appendChild(badge);
+        } else {
+            premiumBadge.textContent = plan === 'pro' ? 'PRO' : 'PLUS';
         }
     } else {
-        statusEl.innerHTML = `<p class="premium-expired">Free Plan — 50 expenses, current month only</p>`;
+        statusEl.innerHTML = `<p class="premium-expired">Free Plan — 50 expenses/month, current month only, 5 AI messages/day</p>`;
         if (upgradeBtn) upgradeBtn.style.display = '';
         if (premiumBadge) premiumBadge.remove();
     }
+
+    updatePlanUI();
+}
+
+function updatePlanUI() {
+    const locked = !isPremium;
+    const catList = $('#categoryBudgetList');
+    const saveBtn = $('#saveCategoryBudgetsBtn');
+    const lock = $('#categoryBudgetLock');
+
+    if (catList) {
+        catList.style.display = locked ? 'none' : '';
+        if (saveBtn) saveBtn.style.display = locked ? 'none' : '';
+        if (lock) lock.style.display = locked ? '' : 'none';
+        renderCategoryBudgetsSettings();
+    }
+
+    const panel = $('#categoryBudgetPanel');
+    if (panel) panel.style.display = isPremium ? '' : 'none';
+    if (isPremium) renderCategoryBudgets();
+
+    const insights = $('#insightsPanel');
+    if (insights) {
+        if (plan === 'pro') {
+            insights.style.display = '';
+            $('#insightsLock').style.display = 'none';
+            renderInsights();
+        } else {
+            insights.style.display = isPremium ? '' : 'none';
+            $('#insightsLock').style.display = isPremium ? '' : 'none';
+            if (!isPremium) $('#insightsGrid').innerHTML = '';
+        }
+    }
+}
+
+function formatPrice(amount, code) {
+    const cur = CURRENCIES[code] || CURRENCIES.USD;
+    const decimals = code === 'JPY' || code === 'KRW' ? 0 : 2;
+    try {
+        return new Intl.NumberFormat(cur.locale, {
+            style: 'currency',
+            currency: cur.code,
+            minimumFractionDigits: decimals,
+            maximumFractionDigits: decimals
+        }).format(amount);
+    } catch {
+        return cur.symbol + amount.toFixed(decimals);
+    }
+}
+
+function populatePricingSelect() {
+    const sel = $('#pricingCurrencySelect');
+    if (!sel) return;
+    sel.innerHTML = Object.keys(CURRENCIES).map(code =>
+        `<option value="${code}">${CURRENCIES[code].symbol} ${code} - ${CURRENCIES[code].name}</option>`
+    ).join('');
+    sel.value = checkoutCurrency;
+}
+
+function updatePlanPrices() {
+    const p = (PRICES && PRICES[checkoutCurrency]) || { plus: 5, pro: 10 };
+    $('#plusPrice').textContent = formatPrice(p.plus, checkoutCurrency);
+    $('#proPrice').textContent = formatPrice(p.pro, checkoutCurrency);
 }
 
 function openUpgradeModal() {
+    populatePricingSelect();
+    updatePlanPrices();
+    const errEl = $('#checkoutError');
+    if (errEl) { errEl.textContent = ''; errEl.classList.remove('visible'); }
     $('#upgradeModal').classList.add('active');
 }
 
@@ -1128,15 +1318,18 @@ function closeUpgradeModal() {
     $('#upgradeModal').classList.remove('active');
 }
 
-async function startCheckout() {
+async function startCheckout(chosenPlan) {
     const errEl = $('#checkoutError');
     errEl.classList.remove('visible');
-    const btn = $('#checkoutBtn');
+    const btn = chosenPlan === 'pro' ? $('#checkoutProBtn') : $('#checkoutPlusBtn');
     btn.disabled = true;
     btn.textContent = 'Redirecting...';
 
     try {
-        const data = await api('/api/checkout', { method: 'POST' });
+        const data = await api('/api/checkout', {
+            method: 'POST',
+            body: JSON.stringify({ plan: chosenPlan, currency: checkoutCurrency })
+        });
         if (data.url) {
             window.location.href = data.url;
         } else {
@@ -1146,8 +1339,19 @@ async function startCheckout() {
         errEl.textContent = err.message;
         errEl.classList.add('visible');
         btn.disabled = false;
-        btn.textContent = 'Subscribe Now';
+        btn.textContent = `Subscribe to ${chosenPlan === 'pro' ? 'Pro' : 'Plus'}`;
     }
+}
+
+async function loadPricing() {
+    try {
+        const data = await api('/api/pricing');
+        if (data && data.prices) PRICES = data.prices;
+    } catch {
+        PRICES = null;
+    }
+    if (PRICES && !PRICES[checkoutCurrency]) checkoutCurrency = 'USD';
+    if (!checkoutCurrency) checkoutCurrency = 'USD';
 }
 
 function initCurrency() {
@@ -1170,6 +1374,7 @@ async function init() {
             currentUser = data.user;
             selectedCurrency = currentUser.currency || 'USD';
             budget = currentUser.budget || 0;
+            checkoutCurrency = selectedCurrency;
             if (currentUser.theme && currentUser.theme !== 'system') localStorage.setItem(THEME_KEY, currentUser.theme);
             showApp();
             updateUserInfo();
@@ -1177,11 +1382,12 @@ async function init() {
             initTheme();
             initCurrency();
             updateModalLabels();
+            await loadPricing();
             await loadExpensesFromServer();
             refreshAll();
 
             if (params.get('upgraded') === 'true' && currentUser.premium) {
-                setTimeout(() => alert('Premium activated! You now have unlimited access.'), 500);
+                setTimeout(() => alert(`${plan === 'pro' ? 'Pro' : 'Plus'} activated! You now have unlimited expenses and full history.`), 500);
             }
         } catch (err) {
             if (err.message === 'Invalid token' || err.message === 'No token provided') {
@@ -1193,6 +1399,7 @@ async function init() {
         }
     } else {
         showScreen('landing');
+        loadPricing();
     }
 }
 
@@ -1332,12 +1539,34 @@ function handleChatInput() {
     if (!text) return;
     addChatMessage(text, false);
     input.value = '';
-    setTimeout(() => {
-        const responses = getChatResponse(text);
-        responses.forEach((line, i) => {
-            setTimeout(() => addChatMessage(line, true), i * 300);
-        });
-    }, 500);
+    const typed = text;
+
+    const sendReply = () => {
+        setTimeout(() => {
+            const responses = getChatResponse(typed);
+            responses.forEach((line, i) => {
+                setTimeout(() => addChatMessage(line, true), i * 300);
+            });
+        }, 500);
+    };
+
+    if (!authToken || plan === 'pro') {
+        sendReply();
+        return;
+    }
+
+    api('/api/ai/usage', { method: 'POST' })
+        .then(data => {
+            if (data && data.ok) {
+                sendReply();
+            } else {
+                const up = data && data.upgradeRequired;
+                addChatMessage(up
+                    ? "You've reached your free daily limit of AI messages. Upgrade to <strong>Plus</strong> for 30/day or <strong>Pro</strong> for unlimited!"
+                    : "You've reached your daily AI message limit on this plan. <strong>Pro</strong> gives you unlimited messages.", true);
+            }
+        })
+        .catch(() => sendReply());
 }
 
 function initChatbot() {
