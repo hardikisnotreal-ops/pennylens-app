@@ -19,7 +19,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="PennyLens - Smart Expense Tracker">
     <meta name="twitter:description" content="Track every dollar, set budgets, and build better financial habits.">
-    <link rel="stylesheet" href="style.css?v=6">
+    <link rel="stylesheet" href="style.css?v=7">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
@@ -75,7 +75,7 @@
                     </div>
                     <div class="hero-stat-divider"></div>
                     <div class="hero-stat">
-                        <strong>3</strong>
+                        <strong>7</strong>
                         <span>Themes</span>
                     </div>
                 </div>
@@ -194,7 +194,7 @@
                     </div>
                     <div class="about-item">
                         <strong>Design</strong>
-                        <span>Glassmorphism UI with Dark & Light themes</span>
+                        <span>Flat, minimal UI with 7 themes — Light, Dark, Ocean, Sunset, Neon, Rose, Forest</span>
                     </div>
                 </div>
             </div>
@@ -371,6 +371,18 @@
         </nav>
 
         <main class="main">
+            <div class="page-header">
+                <div>
+                    <h1>Dashboard</h1>
+                    <p id="dashboardDate" class="page-header-sub"></p>
+                </div>
+                <div class="page-header-actions">
+                    <button class="btn btn-secondary" id="exportBtn" title="Export CSV">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        Export
+                    </button>
+                </div>
+            </div>
             <div class="top-section">
                 <section class="summary-cards">
                     <div class="card card-balance">
@@ -783,6 +795,12 @@
     </div>
 
     <!-- AI Chatbot -->
+    <button id="addExpenseMobileBtn" class="add-expense-mobile btn btn-primary" title="Add Expense">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+    </button>
     <div id="chatbotToggle" class="chatbot-toggle" title="Money Assistant">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
@@ -824,6 +842,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=6"></script>
+    <script src="app.js?v=7"></script>
 </body>
 </html>

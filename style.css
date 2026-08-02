@@ -29,29 +29,29 @@
 }
 
 [data-theme="dark"] {
-    --bg: #0a0a1a;
-    --bg-gradient: linear-gradient(135deg, #1a1040 0%, #0f0f2e 50%, #1a0a2e 100%);
-    --surface: #151530;
-    --surface-solid: #1e1e3c;
-    --surface-hover: #202040;
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --text: #e8eaf0;
-    --text-secondary: #a0a0c0;
-    --text-muted: #6060a0;
-    --border: rgba(255, 255, 255, 0.1);
-    --primary: #818cf8;
-    --primary-hover: #6366f1;
-    --primary-light: rgba(129, 140, 248, 0.15);
+    --bg: #101418;
+    --bg-gradient: linear-gradient(180deg, #101418 0%, #101418 100%);
+    --surface: #1a1f26;
+    --surface-solid: #1c2128;
+    --surface-hover: #232a33;
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --text: #e9edf2;
+    --text-secondary: #9aa7b4;
+    --text-muted: #6b7785;
+    --border: rgba(255, 255, 255, 0.08);
+    --primary: #ff9500;
+    --primary-hover: #ffab2e;
+    --primary-light: rgba(255, 149, 0, 0.16);
     --danger: #f87171;
     --danger-hover: #ef4444;
     --danger-light: rgba(248, 113, 113, 0.12);
     --success: #34d399;
     --success-light: rgba(52, 211, 153, 0.12);
     --warning: #fbbf24;
-    --shadow-sm: 0 2px 8px rgba(0,0,0,0.2);
-    --shadow: 0 4px 16px rgba(0,0,0,0.3);
-    --shadow-md: 0 8px 32px rgba(0,0,0,0.35);
-    --shadow-lg: 0 16px 48px rgba(0,0,0,0.4);
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+    --shadow: 0 4px 16px rgba(0,0,0,0.4);
+    --shadow-md: 0 8px 32px rgba(0,0,0,0.5);
+    --shadow-lg: 0 16px 48px rgba(0,0,0,0.6);
 }
 
 /* Ocean Theme */
@@ -659,6 +659,34 @@ body {
     padding: 1.5rem 0 3rem;
 }
 
+/* Apple-style large page title */
+.page-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+}
+
+.page-header h1 {
+    font-size: 2.4rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    color: var(--text);
+    margin: 0 0 0.25rem;
+}
+
+.page-header-sub {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.page-header-actions .btn {
+    padding: 0.55rem 1rem;
+}
+
 /* Summary Cards */
 .summary-cards {
     display: grid;
@@ -1091,6 +1119,19 @@ input::placeholder {
     max-height: 500px;
     overflow-y: auto;
     scroll-behavior: smooth;
+}
+
+.date-group {
+    margin-bottom: 0.5rem;
+}
+
+.date-group-header {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-muted);
+    padding: 0.9rem 0.75rem 0.4rem;
 }
 
 .expense-row {
@@ -1712,7 +1753,7 @@ input::placeholder {
 }
 
 [data-theme="dark"] .cs-dropdown {
-    background: rgba(24, 24, 50, 0.97);
+    background: rgba(24, 26, 32, 0.97);
 }
 
 .cs-dropdown.open {
@@ -1810,7 +1851,7 @@ input::placeholder {
 }
 
 [data-theme="dark"] .mobile-menu-inner {
-    background: rgba(30, 30, 60, 0.95);
+    background: rgba(28, 33, 40, 0.95);
 }
 
 .mobile-menu-user {
@@ -1908,6 +1949,27 @@ input::placeholder {
     .expense-actions {
         opacity: 1;
         transform: none;
+        gap: 0.5rem;
+    }
+
+    .expense-actions .btn-sm {
+        width: 38px;
+        height: 38px;
+    }
+
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .page-header-actions {
+        width: 100%;
+    }
+
+    .page-header-actions .btn {
+        width: 100%;
+        justify-content: center;
     }
 
     .expense-row:hover {
@@ -1945,17 +2007,25 @@ input::placeholder {
 
     .add-expense-mobile {
         position: fixed;
-        bottom: 1.5rem;
+        bottom: 92px;
         right: 1.5rem;
         width: 56px;
         height: 56px;
         border-radius: 50%;
         padding: 0;
-        display: none;
+        display: flex;
         align-items: center;
         justify-content: center;
         z-index: 500;
         box-shadow: 0 4px 20px rgba(255, 149, 0, 0.4);
+    }
+
+    #addExpenseBtn {
+        display: none;
+    }
+
+    .kbd-hint {
+        display: none;
     }
 
     .main {
@@ -2209,17 +2279,17 @@ input::placeholder {
 /* Hero */
 .hero {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    gap: 3rem;
-    padding: 5rem 2rem 4rem;
+    text-align: center;
+    gap: 3.5rem;
+    padding: 5.5rem 2rem 5rem;
     max-width: 1200px;
     margin: 0 auto;
 }
 
 .hero-content {
-    flex: 1;
-    max-width: 560px;
+    max-width: 760px;
 }
 
 .hero-badge {
@@ -2231,7 +2301,7 @@ input::placeholder {
     font-size: 0.8rem;
     font-weight: 600;
     margin-bottom: 1.2rem;
-    border: 1px solid rgba(99,102,241,0.2);
+    border: 1px solid rgba(255,149,0,0.2);
 }
 
 .hero h1 {
@@ -2258,6 +2328,7 @@ input::placeholder {
 
 .hero-actions {
     display: flex;
+    justify-content: center;
     gap: 0.75rem;
     margin-bottom: 2.5rem;
 }
@@ -2294,8 +2365,9 @@ input::placeholder {
 
 /* Hero Visual */
 .hero-visual {
-    flex: 1;
     max-width: 400px;
+    width: 100%;
+    margin: 0 auto;
     position: relative;
 }
 
@@ -2594,14 +2666,14 @@ input::placeholder {
     justify-content: center;
     cursor: pointer;
     z-index: 1000;
-    box-shadow: 0 4px 20px rgba(99,102,241,0.4);
+    box-shadow: 0 4px 20px rgba(255,149,0,0.4);
     transition: transform 0.3s, box-shadow 0.3s;
     border: none;
 }
 
 .chatbot-toggle:hover {
     transform: scale(1.08);
-    box-shadow: 0 6px 28px rgba(99,102,241,0.5);
+    box-shadow: 0 6px 28px rgba(255,149,0,0.5);
 }
 
 .chatbot-window {
@@ -2855,10 +2927,6 @@ input::placeholder {
     justify-content: center;
 }
 
-.hero .social-proof {
-    justify-content: flex-start;
-}
-
 .avatar-stack {
     display: flex;
 }
@@ -2945,11 +3013,11 @@ input::placeholder {
 
 /* Dark theme landing */
 [data-theme="dark"] .hero-card {
-    background: #1e1e3c !important;
+    background: #1c2128 !important;
 }
 
 [data-theme="dark"] .landing-nav {
-    background: #0f0f2e;
+    background: #101418;
 }
 
 [data-theme="dark"] .about-item {
@@ -2957,5 +3025,5 @@ input::placeholder {
 }
 
 [data-theme="dark"] .feature-card {
-    background: #1e1e3c !important;
+    background: #1c2128 !important;
 }

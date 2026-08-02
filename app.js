@@ -381,6 +381,10 @@ function updateMonthLabels() {
     $('#chartMonthLabel').textContent = monthName;
     $('#dailyMonthLabel').textContent = monthName;
     $('#monthChip').innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg> ${monthName}`;
+    const dateEl = $('#dashboardDate');
+    if (dateEl) {
+        dateEl.textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+    }
 }
 
 function renderExpenses() {
@@ -399,30 +403,52 @@ function renderExpenses() {
         return;
     }
 
-    list.innerHTML = filtered.map(e => `
-        <div class="expense-row" data-id="${e.id}">
-            <div class="expense-icon cat-${e.category}">${CATEGORIES[e.category].icon}</div>
-            <div class="expense-info">
-                <div class="name">${CATEGORIES[e.category].label}</div>
-                <div class="meta">${formatDate(e.date)}${e.note ? ' · ' + escapeHtml(e.note) : ''}</div>
-            </div>
-            <div class="expense-amount">-${formatCurrency(e.amount)}</div>
-            <div class="expense-actions">
-                <button class="btn-sm edit" onclick="editExpense('${e.id}')" title="Edit">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
-                </button>
-                <button class="btn-sm delete" onclick="deleteExpense('${e.id}')" title="Delete">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="3 6 5 6 21 6"></polyline>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    </svg>
-                </button>
-            </div>
+    const groups = {};
+    const sorted = [...filtered].sort((a, b) => new Date(b.date) - new Date(a.date));
+    sorted.forEach(e => {
+        const key = e.date;
+        (groups[key] = groups[key] || []).push(e);
+    });
+
+    list.innerHTML = Object.entries(groups).map(([date, items]) => `
+        <div class="date-group">
+            <div class="date-group-header">${formatDateGroup(date)}</div>
+            ${items.map(e => `
+                <div class="expense-row" data-id="${e.id}">
+                    <div class="expense-icon cat-${e.category}">${CATEGORIES[e.category].icon}</div>
+                    <div class="expense-info">
+                        <div class="name">${CATEGORIES[e.category].label}</div>
+                        <div class="meta">${e.note ? escapeHtml(e.note) : 'Expense'}</div>
+                    </div>
+                    <div class="expense-amount">-${formatCurrency(e.amount)}</div>
+                    <div class="expense-actions">
+                        <button class="btn-sm edit" onclick="editExpense('${e.id}')" title="Edit">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                        </button>
+                        <button class="btn-sm delete" onclick="deleteExpense('${e.id}')" title="Delete">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            `).join('')}
         </div>
     `).join('');
+}
+
+function formatDateGroup(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const diff = (today - d) / 86400000;
+    if (diff === 0) return 'Today';
+    if (diff === 1) return 'Yesterday';
+    return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
 function escapeHtml(str) {
@@ -698,6 +724,7 @@ function updateBudgetHint() {
 
 // Event Listeners
 $('#addExpenseBtn').addEventListener('click', () => openModal());
+$('#addExpenseMobileBtn').addEventListener('click', () => openModal());
 $('#closeModal').addEventListener('click', closeModal);
 $('#cancelModal').addEventListener('click', closeModal);
 $('#expenseModal').addEventListener('click', (e) => {
@@ -771,6 +798,7 @@ $('#settingsSetBudgetBtn').addEventListener('click', () => {
 });
 
 $('#settingsExportBtn').addEventListener('click', exportCSV);
+$('#exportBtn').addEventListener('click', exportCSV);
 
 $('#settingsClearBtn').addEventListener('click', () => {
     if (!confirm('This will delete ALL your expenses. This cannot be undone. Continue?')) return;
